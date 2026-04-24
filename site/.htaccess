@@ -1,1 +1,9 @@
 ErrorDocument 404 /404.html
+
+# Staging: don't cache HTML so iterations show up immediately.
+# Remove this block before production cutover.
+<FilesMatch "\.(html|htm)$">
+  Header set Cache-Control "no-store, no-cache, must-revalidate, max-age=0"
+  Header set Pragma "no-cache"
+  Header set Expires "0"
+</FilesMatch>
