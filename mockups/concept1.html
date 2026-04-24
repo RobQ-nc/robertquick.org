@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>robertquick.org</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=VT323&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #010806;
+    --green: #00ff41;
+    --green-dim: rgba(0,255,65,0.55);
+    --green-faint: rgba(0,255,65,0.25);
+    --cyan: #00eeff;
+    --pink: #ff00aa;
+    --amber: #ffb000;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--green);
+    font-family: 'Share Tech Mono', monospace;
+    overflow: hidden;
+  }
+  /* Matrix rain canvas, dimmed */
+  #rain {
+    position: fixed; inset: 0;
+    z-index: 0;
+    opacity: 0.18;
+    pointer-events: none;
+  }
+  /* Subtle scanlines */
+  body::before {
+    content: ""; position: fixed; inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      rgba(0,0,0,0) 0px,
+      rgba(0,0,0,0) 2px,
+      rgba(0,0,0,0.18) 3px,
+      rgba(0,0,0,0) 4px
+    );
+    z-index: 1; pointer-events: none;
+  }
+  /* Vignette */
+  body::after {
+    content: ""; position: fixed; inset: 0;
+    background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.6) 100%);
+    z-index: 2; pointer-events: none;
+  }
+  main {
+    position: relative;
+    z-index: 3;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+  }
+  .terminal {
+    width: min(720px, 100%);
+    font-size: clamp(13px, 1.4vw, 16px);
+    line-height: 1.55;
+    text-shadow: 0 0 6px rgba(0,255,65,0.35);
+    white-space: pre-wrap;
+  }
+  .boot-line { opacity: 0; }
+  .boot-line.show { opacity: 1; transition: opacity 0.08s; }
+  .ok { color: var(--cyan); }
+  .warn { color: var(--amber); }
+  .dim { color: var(--green-dim); }
+  .name {
+    font-family: 'VT323', monospace;
+    font-size: clamp(28px, 4vw, 40px);
+    letter-spacing: 0.06em;
+    color: var(--green);
+    margin: 1rem 0 0.25rem;
+  }
+  .tagline {
+    color: var(--green-dim);
+    margin-bottom: 1.4rem;
+  }
+  .doors { list-style: none; }
+  .doors li {
+    margin: 0.18rem 0;
+  }
+  .doors a {
+    color: var(--green);
+    text-decoration: none;
+    display: inline-block;
+    padding: 1px 4px;
+    border-left: 2px solid transparent;
+    transition: all 0.12s ease;
+  }
+  .doors a .arrow {
+    color: var(--cyan);
+    margin-right: 0.6em;
+  }
+  .doors a .label {
+    color: var(--green);
+  }
+  .doors a .desc {
+    color: var(--green-faint);
+    margin-left: 0.4em;
+  }
+  .doors a:hover {
+    border-left-color: var(--pink);
+    background: rgba(0,255,65,0.05);
+    text-shadow:
+      0 0 6px rgba(0,255,65,0.6),
+      1px 0 0 rgba(255,0,170,0.6),
+     -1px 0 0 rgba(0,238,255,0.5);
+  }
+  .doors a:hover .arrow { color: var(--pink); }
+  .prompt {
+    margin-top: 1.5rem;
+    color: var(--green);
+  }
+  .cursor {
+    display: inline-block;
+    width: 0.55em;
+    height: 1.05em;
+    background: var(--green);
+    vertical-align: -2px;
+    margin-left: 2px;
+    box-shadow: 0 0 8px rgba(0,255,65,0.7);
+    animation: blink 1.05s steps(2,start) infinite;
+  }
+  @keyframes blink { to { background: transparent; box-shadow: none; } }
+  .footer {
+    position: fixed;
+    bottom: 0.8rem;
+    left: 0; right: 0;
+    text-align: center;
+    color: var(--green-faint);
+    font-size: 11px;
+    z-index: 3;
+    letter-spacing: 0.15em;
+  }
+</style>
+</head>
+<body>
+<canvas id="rain"></canvas>
+
+<main>
+  <div class="terminal" id="term">
+    <div class="boot-line"><span class="dim">&gt;</span> CONNECTION ESTABLISHED</div>
+    <div class="boot-line"><span class="dim">&gt;</span> RELAY: <span class="ok">ROBERTQUICK.ORG</span></div>
+    <div class="boot-line"><span class="dim">&gt;</span> HANDSHAKE: <span class="ok">ED25519/OK</span></div>
+    <div class="boot-line"><span class="dim">&gt;</span> AUTHENTICATING SIGNAL...</div>
+    <div class="boot-line"><span class="dim">&gt;</span> <span class="ok">[OK]</span> &nbsp; <span class="dim">// the territory resists the map</span></div>
+
+    <div class="boot-line">
+      <div class="name">ROBERT QUICK</div>
+      <div class="tagline">// theory practitioner, signal operator &nbsp; <span class="warn">7/8</span></div>
+    </div>
+
+    <div class="boot-line">
+      <ul class="doors">
+        <li><a href="/simulacra"><span class="arrow">▸</span><span class="label">/simulacra</span><span class="desc">— frameworks under stress</span></a></li>
+        <li><a href="/frequencies"><span class="arrow">▸</span><span class="label">/frequencies</span><span class="desc">— domains of inquiry</span></a></li>
+        <li><a href="/paradox"><span class="arrow">▸</span><span class="label">/paradox</span><span class="desc">— load-bearing contradictions</span></a></li>
+        <li><a href="/counterpoint"><span class="arrow">▸</span><span class="label">/counterpoint</span><span class="desc">— music as critique</span></a></li>
+        <li><a href="/archive"><span class="arrow">▸</span><span class="label">/archive</span><span class="desc">— annotated reading</span></a></li>
+        <li><a href="/now"><span class="arrow">▸</span><span class="label">/now</span><span class="desc">— current state</span></a></li>
+        <li><a href="/connect"><span class="arrow">▸</span><span class="label">/connect</span><span class="desc">— open channels</span></a></li>
+      </ul>
+    </div>
+
+    <div class="boot-line prompt">&gt; <span class="cursor"></span></div>
+  </div>
+</main>
+
+<div class="footer">// SESSION ACTIVE &nbsp;·&nbsp; AWAITING INPUT</div>
+
+<script>
+  // Boot reveal — staggered line-by-line
+  const lines = document.querySelectorAll('.boot-line');
+  const delays = [120, 220, 340, 480, 700, 1100, 1500, 2050];
+  lines.forEach((el, i) => {
+    setTimeout(() => el.classList.add('show'), delays[i] ?? 200 * i);
+  });
+
+  // Matrix rain
+  (function() {
+    const canvas = document.getElementById('rain');
+    const ctx = canvas.getContext('2d');
+    let W, H, cols, drops;
+    const chars = 'アイウエオカキクケコサシスセソタチツテトナニヌネノ0123456789ABCDEF∂∫∑∏√∞≠≤≥∈∉⊂⊃';
+    function init() {
+      W = canvas.width = window.innerWidth;
+      H = canvas.height = window.innerHeight;
+      cols = Math.floor(W / 22);
+      drops = Array.from({length: cols}, () => Math.random() * -80);
+    }
+    function draw() {
+      ctx.fillStyle = 'rgba(1,8,6,0.06)';
+      ctx.fillRect(0, 0, W, H);
+      ctx.font = '14px "Share Tech Mono", monospace';
+      for (let i = 0; i < cols; i++) {
+        const ch = chars[Math.floor(Math.random() * chars.length)];
+        const x = i * 22;
+        const y = drops[i] * 22;
+        if (Math.random() < 0.018)      ctx.fillStyle = '#ff00aa';
+        else if (Math.random() < 0.035) ctx.fillStyle = 'rgba(0,238,255,0.8)';
+        else if (Math.random() < 0.06)  ctx.fillStyle = 'rgba(0,255,65,0.95)';
+        else                            ctx.fillStyle = 'rgba(0,255,65,0.3)';
+        ctx.fillText(ch, x, y);
+        if (y > H && Math.random() > 0.975) drops[i] = 0;
+        drops[i]++;
+      }
+      requestAnimationFrame(draw);
+    }
+    init(); draw();
+    window.addEventListener('resize', init);
+  })();
+</script>
+</body>
+</html>

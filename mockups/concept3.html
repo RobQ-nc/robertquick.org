@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>robertquick.org // session</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=VT323&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #050008;
+    --green: #00ff41;
+    --green-dim: rgba(0,255,65,0.6);
+    --green-faint: rgba(0,255,65,0.28);
+    --cyan: #00eeff;
+    --pink: #ff00aa;
+    --amber: #ffb000;
+    --red: #ff2e4d;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    min-height: 100%;
+    background: var(--bg);
+    color: var(--green);
+    font-family: 'Share Tech Mono', monospace;
+  }
+  body { overflow-x: hidden; }
+  /* Matrix rain — very low, this concept is busier */
+  #rain {
+    position: fixed; inset: 0;
+    z-index: 0;
+    opacity: 0.10;
+    pointer-events: none;
+  }
+  /* Scanlines */
+  body::before {
+    content: ""; position: fixed; inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      rgba(0,0,0,0) 0px,
+      rgba(0,0,0,0) 2px,
+      rgba(0,0,0,0.22) 3px,
+      rgba(0,0,0,0) 4px
+    );
+    z-index: 1; pointer-events: none;
+  }
+  /* CRT vignette */
+  body::after {
+    content: ""; position: fixed; inset: 0;
+    background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.7) 100%);
+    z-index: 2; pointer-events: none;
+  }
+
+  main {
+    position: relative;
+    z-index: 3;
+    padding: 1.5rem 2rem 4rem;
+    max-width: 920px;
+    margin: 0 auto;
+  }
+
+  .titlebar {
+    display: flex;
+    justify-content: space-between;
+    color: var(--green-faint);
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    border-bottom: 1px solid rgba(0,255,65,0.15);
+    padding-bottom: 0.5rem;
+    margin-bottom: 1.4rem;
+  }
+  .titlebar .right span { margin-left: 1rem; }
+  .titlebar .live::before {
+    content: "●";
+    color: var(--red);
+    margin-right: 6px;
+    animation: pulse 1.4s infinite;
+  }
+  @keyframes pulse { 50% { opacity: 0.3; } }
+
+  .console {
+    font-size: clamp(13px, 1.35vw, 15px);
+    line-height: 1.6;
+    text-shadow: 0 0 5px rgba(0,255,65,0.3);
+  }
+  .console .cmd { color: var(--green); }
+  .console .cmd::before {
+    content: "rob@robertquick:~$ ";
+    color: var(--cyan);
+  }
+  .console .out { color: var(--green-dim); white-space: pre; }
+  .console .comment { color: var(--green-faint); }
+  .console .ok { color: var(--cyan); }
+  .console .warn { color: var(--amber); }
+  .console .err { color: var(--red); }
+  .console .hl { color: var(--pink); }
+  .block { margin: 0.6rem 0 1rem; }
+
+  /* ls -la directory listing */
+  .ls a {
+    color: var(--green);
+    text-decoration: none;
+    display: inline-block;
+    padding: 0 2px;
+    transition: all 0.1s ease;
+  }
+  .ls a:hover {
+    color: var(--pink);
+    background: rgba(255,0,170,0.08);
+    text-shadow:
+      1.5px 0 0 rgba(0,238,255,0.7),
+     -1.5px 0 0 rgba(255,0,170,0.7);
+    animation: glitch 0.32s linear;
+  }
+  @keyframes glitch {
+    0%   { transform: translate(0,0); }
+    20%  { transform: translate(-1px, 0.5px); }
+    40%  { transform: translate(1px, -0.5px); }
+    60%  { transform: translate(-0.5px, 0); }
+    80%  { transform: translate(0.5px, 0); }
+    100% { transform: translate(0,0); }
+  }
+
+  .prompt-active {
+    color: var(--green);
+    margin-top: 1rem;
+  }
+  .prompt-active::before {
+    content: "rob@robertquick:~$ ";
+    color: var(--cyan);
+  }
+  .cursor {
+    display: inline-block;
+    width: 0.55em;
+    height: 1.05em;
+    background: var(--green);
+    vertical-align: -2px;
+    margin-left: 2px;
+    box-shadow: 0 0 8px rgba(0,255,65,0.7);
+    animation: blink 1.05s steps(2,start) infinite;
+  }
+  @keyframes blink { to { background: transparent; box-shadow: none; } }
+
+  .tip {
+    color: var(--green-faint);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    margin-top: 2.5rem;
+    text-align: center;
+  }
+
+  /* Occasional chromatic glitch on hover of any link */
+  a:focus-visible { outline: 1px dashed var(--cyan); outline-offset: 3px; }
+</style>
+</head>
+<body>
+<canvas id="rain"></canvas>
+
+<main>
+  <div class="titlebar">
+    <div class="left">SESSION // tty.0 // robertquick.org</div>
+    <div class="right">
+      <span class="live">LIVE</span>
+      <span id="clock">--:--:-- UTC</span>
+      <span>uptime <span id="uptime">--</span></span>
+    </div>
+  </div>
+
+  <pre class="console" id="console">
+<div class="block">
+<span class="cmd">whoami</span>
+<span class="out">robert.quick</span>
+<span class="out comment"># theory practitioner · signal operator · 7/8</span>
+</div>
+
+<div class="block">
+<span class="cmd">cat /etc/motd</span>
+<span class="out">the territory resists the map</span>
+</div>
+
+<div class="block ls">
+<span class="cmd">ls -la /</span>
+<span class="out">total 7</span>
+<span class="out">drwxr-xr-x  <a href="/simulacra">simulacra</a><span class="comment">     // frameworks under stress</span></span>
+<span class="out">drwxr-xr-x  <a href="/frequencies">frequencies</a><span class="comment">   // domains of inquiry</span></span>
+<span class="out">drwxr-xr-x  <a href="/paradox">paradox</a><span class="comment">       // load-bearing contradictions</span></span>
+<span class="out">drwxr-xr-x  <a href="/counterpoint">counterpoint</a><span class="comment">  // music as critique</span></span>
+<span class="out">drwxr-xr-x  <a href="/archive">archive</a><span class="comment">       // annotated reading</span></span>
+<span class="out">drwxr-xr-x  <a href="/now">now</a><span class="comment">           // current state</span></span>
+<span class="out">-rw-r--r--  <a href="/connect">connect</a><span class="comment">       // open channels</span></span>
+</div>
+
+<div class="block">
+<span class="cmd">cat .signal</span>
+<span class="out">STATUS: <span class="ok">OPEN</span></span>
+<span class="out">DESCENT_LOG: <span class="warn">ACTIVE</span></span>
+<span class="out">RESOLUTION: <span class="err">DEFERRED</span></span>
+</div>
+
+<div class="block">
+<span class="cmd">echo $LAST_THOUGHT</span>
+<span class="out">"<span class="hl">if the simulation is total, what is critique made of?</span>"</span>
+</div>
+
+<div class="prompt-active"><span class="cursor"></span></div>
+  </pre>
+
+  <div class="tip">tab to navigate · enter to select · the cursor is yours</div>
+</main>
+
+<script>
+  // Live clock
+  const clock = document.getElementById('clock');
+  const uptime = document.getElementById('uptime');
+  const start = Date.now();
+  function pad(n) { return n.toString().padStart(2, '0'); }
+  function tick() {
+    const d = new Date();
+    clock.textContent = `${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())} UTC`;
+    const s = Math.floor((Date.now() - start) / 1000);
+    uptime.textContent = `${Math.floor(s/60)}m${pad(s%60)}s`;
+  }
+  tick(); setInterval(tick, 1000);
+
+  // Tab/enter navigation across links
+  const links = Array.from(document.querySelectorAll('a'));
+  let idx = -1;
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      idx = (idx + (e.shiftKey ? -1 : 1) + links.length) % links.length;
+      links[idx].focus();
+    } else if (e.key === 'Enter' && document.activeElement.tagName === 'A') {
+      // default behavior
+    }
+  });
+
+  // Matrix rain
+  (function() {
+    const canvas = document.getElementById('rain');
+    const ctx = canvas.getContext('2d');
+    let W, H, cols, drops;
+    const chars = 'アイウエオカキクケコサシスセソタチツテトナニヌネノ0123456789ABCDEF∂∫∑∏√∞≠≤≥∈∉⊂⊃';
+    function init() {
+      W = canvas.width = window.innerWidth;
+      H = canvas.height = window.innerHeight;
+      cols = Math.floor(W / 22);
+      drops = Array.from({length: cols}, () => Math.random() * -80);
+    }
+    function draw() {
+      ctx.fillStyle = 'rgba(5,0,8,0.07)';
+      ctx.fillRect(0, 0, W, H);
+      ctx.font = '14px "Share Tech Mono", monospace';
+      for (let i = 0; i < cols; i++) {
+        const ch = chars[Math.floor(Math.random() * chars.length)];
+        const x = i * 22;
+        const y = drops[i] * 22;
+        if (Math.random() < 0.02)       ctx.fillStyle = '#ff00aa';
+        else if (Math.random() < 0.035) ctx.fillStyle = 'rgba(0,238,255,0.8)';
+        else                            ctx.fillStyle = 'rgba(0,255,65,0.7)';
+        ctx.fillText(ch, x, y);
+        if (y > H && Math.random() > 0.975) drops[i] = 0;
+        drops[i]++;
+      }
+      requestAnimationFrame(draw);
+    }
+    init(); draw();
+    window.addEventListener('resize', init);
+  })();
+</script>
+</body>
+</html>

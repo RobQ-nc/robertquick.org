@@ -1,0 +1,1363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Robert Quick</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=VT323&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --green: #00ff41;
+      --green-dim: #00cc33;
+      --green-faint: rgba(0,255,65,0.1);
+      --green-glow: rgba(0,255,65,0.4);
+      --magenta: #ff00aa;
+      --magenta-dim: #cc0088;
+      --magenta-faint: rgba(255,0,170,0.1);
+      --magenta-glow: rgba(255,0,170,0.4);
+      --cyan: #00eeff;
+      --cyan-faint: rgba(0,238,255,0.08);
+      --bg: #010806;
+      --bg-card: #020d07;
+      --bg-card-hover: #041209;
+      --border: rgba(0,255,65,0.18);
+      --border-bright: rgba(0,255,65,0.55);
+      --text-dim: rgba(0,255,65,0.5);
+      --font-mono: 'Share Tech Mono', monospace;
+      --font-display: 'VT323', monospace;
+      --font-body: 'Space Mono', monospace;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--green);
+      font-family: var(--font-mono);
+      overflow-x: hidden;
+      cursor: crosshair;
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg, transparent, transparent 3px,
+        rgba(0,0,0,0.12) 3px, rgba(0,0,0,0.12) 4px
+      );
+      pointer-events: none;
+      z-index: 9998;
+    }
+
+    .noise-overlay {
+      position: fixed; inset: 0;
+      pointer-events: none; z-index: 9997; opacity: 0.035;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    }
+
+    #rain {
+      position: fixed; top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none; z-index: 0; opacity: 0.18;
+    }
+
+    /* SCROLL PROGRESS */
+    #scroll-progress {
+      position: fixed;
+      top: 0; left: 0;
+      height: 2px;
+      width: 0%;
+      background: linear-gradient(90deg, var(--magenta), var(--cyan));
+      box-shadow: 0 0 8px var(--magenta-glow);
+      z-index: 1001;
+      transition: width 0.1s linear;
+    }
+
+    /* NAV */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0;
+      z-index: 1000;
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 1.1rem 2.5rem;
+      border-bottom: 1px solid var(--border);
+      background: rgba(1,8,6,0.94);
+      backdrop-filter: blur(12px);
+    }
+
+    .nav-logo {
+      font-family: var(--font-display);
+      font-size: 1.6rem; color: var(--green);
+      text-decoration: none; letter-spacing: 0.1em;
+      text-shadow: 0 0 10px var(--green-glow);
+      transition: color 0.2s, text-shadow 0.2s;
+    }
+    .nav-logo:hover { color: var(--magenta); text-shadow: 0 0 16px var(--magenta-glow); }
+
+    .nav-links { display: flex; gap: 1.5rem; list-style: none; }
+    .nav-links a {
+      color: var(--text-dim); text-decoration: none;
+      font-size: 0.68rem; letter-spacing: 0.12em;
+      transition: color 0.2s, text-shadow 0.2s;
+    }
+    .nav-links a:hover { color: var(--magenta); text-shadow: 0 0 10px var(--magenta-glow); }
+
+    /* HERO */
+    #hero {
+      min-height: 100vh;
+      display: flex; flex-direction: column;
+      justify-content: center; align-items: flex-start;
+      padding: 0 2.5rem; padding-top: 5rem;
+      position: relative; overflow: hidden; z-index: 1;
+    }
+
+    .hero-grid {
+      position: absolute; inset: 0;
+      background-image:
+        linear-gradient(rgba(0,255,65,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,255,65,0.03) 1px, transparent 1px);
+      background-size: 50px 50px;
+      pointer-events: none;
+    }
+
+    .hero-vignette {
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse at center, transparent 40%, rgba(1,8,6,0.85) 100%);
+      pointer-events: none;
+    }
+
+    .hero-label {
+      font-size: 0.68rem; color: var(--text-dim); letter-spacing: 0.3em;
+      margin-bottom: 1.5rem; opacity: 0;
+      animation: fadeUp 0.6s ease forwards 0.4s;
+    }
+
+    .hero-title {
+      font-family: var(--font-display);
+      font-size: clamp(5rem, 14vw, 12rem);
+      line-height: 0.9; letter-spacing: 0.05em;
+      margin-bottom: 2.5rem; opacity: 0;
+      animation: glitchReveal 1s ease forwards 0.7s;
+      position: relative;
+    }
+    .hero-title::before, .hero-title::after {
+      content: attr(data-text);
+      position: absolute; top: 0; left: 0; width: 100%;
+    }
+    .hero-title::before {
+      color: var(--magenta);
+      clip-path: polygon(0 20%, 100% 20%, 100% 40%, 0 40%);
+      transform: translateX(-3px); opacity: 0;
+      animation: rgbShift1 8s ease-in-out infinite 2s;
+    }
+    .hero-title::after {
+      color: var(--cyan);
+      clip-path: polygon(0 60%, 100% 60%, 100% 80%, 0 80%);
+      transform: translateX(3px); opacity: 0;
+      animation: rgbShift2 8s ease-in-out infinite 2.3s;
+    }
+
+    .hero-quote {
+      max-width: 600px;
+      border-left: 2px solid var(--magenta-dim);
+      padding-left: 1.5rem; margin-bottom: 3rem;
+      opacity: 0; animation: fadeUp 0.6s ease forwards 1.2s;
+    }
+    .hero-quote blockquote {
+      font-size: 0.92rem; line-height: 1.9;
+      color: rgba(0,255,65,0.6); font-style: italic; margin-bottom: 0.6rem;
+    }
+    .hero-quote cite { font-size: 0.68rem; letter-spacing: 0.15em; color: var(--magenta-dim); }
+
+    .music-notation-container {
+      margin-bottom: 2.5rem;
+      margin-top: 1rem;
+      border: 1px solid var(--border);
+      padding: 1.75rem 2rem;
+      background: var(--bg-card);
+      max-width: 560px;
+      opacity: 0;
+      animation: fadeUp 0.6s ease forwards 1.4s;
+    }
+    .notation-label {
+      font-size: 0.58rem;
+      letter-spacing: 0.2em;
+      color: var(--magenta-dim);
+      margin-bottom: 1.25rem;
+    }
+    .staff-svg {
+      width: 100%; height: auto;
+      display: block;
+      margin-bottom: 0.75rem;
+    }
+    .notation-analysis {
+      font-size: 0.65rem;
+      line-height: 1.85;
+      color: rgba(0,255,65,0.4);
+      letter-spacing: 0.05em;
+      font-family: var(--font-body);
+    }
+
+    .hero-scroll {
+      font-size: 0.62rem; letter-spacing: 0.35em; color: var(--text-dim);
+      opacity: 0;
+      animation: fadeUp 0.6s ease forwards 1.6s, blink 2s step-end infinite 2.5s;
+    }
+
+    /* DIVIDER */
+    .divider {
+      width: 100%; max-width: 1200px; margin: 0 auto;
+      height: 1px;
+      background: linear-gradient(90deg, var(--magenta-dim), var(--green-dim), transparent);
+      position: relative; z-index: 1;
+    }
+
+    /* SECTIONS */
+    section {
+      padding: 7rem 2.5rem; max-width: 1200px;
+      margin: 0 auto; position: relative; z-index: 1;
+    }
+
+    .node-label { font-size: 0.63rem; letter-spacing: 0.3em; color: var(--text-dim); margin-bottom: 0.75rem; }
+
+    .section-title {
+      font-family: var(--font-display);
+      font-size: clamp(2.5rem, 5vw, 4.5rem);
+      letter-spacing: 0.1em; margin-bottom: 0.5rem; display: inline-block;
+    }
+    .section-title.magenta { color: var(--magenta); text-shadow: 0 0 20px var(--magenta-glow); }
+    .section-title.green   { color: var(--green);   text-shadow: 0 0 20px var(--green-glow); }
+    .section-title.cyan    { color: var(--cyan);     text-shadow: 0 0 20px rgba(0,238,255,0.4); }
+
+    .section-sub { font-size: 0.75rem; color: var(--text-dim); letter-spacing: 0.12em; margin-bottom: 3.5rem; }
+
+    /* THINKER CARDS */
+    .thinkers-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .thinker-card {
+      border: 1px solid var(--border);
+      padding: 1.75rem; background: var(--bg-card);
+      position: relative; overflow: hidden;
+      transition: border-color 0.3s, box-shadow 0.3s, background 0.3s;
+      opacity: 0; transform: translateY(16px);
+    }
+    .thinker-card.visible { animation: fadeUp 0.45s ease forwards; }
+    .thinker-card::after {
+      content: ''; position: absolute;
+      bottom: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--magenta), transparent);
+      opacity: 0; transition: opacity 0.3s;
+    }
+    .thinker-card:hover {
+      border-color: rgba(255,0,170,0.4); background: var(--bg-card-hover);
+      box-shadow: 0 0 30px rgba(255,0,170,0.08), inset 0 0 40px rgba(255,0,170,0.03);
+    }
+    .thinker-card:hover::after { opacity: 1; }
+
+    /* tension card variant */
+    .thinker-card.tension {
+      border-color: rgba(0,238,255,0.2);
+      grid-column: span 2;
+    }
+    @media (max-width: 700px) { .thinker-card.tension { grid-column: span 1; } }
+    .thinker-card.tension:hover { border-color: rgba(0,238,255,0.5); box-shadow: 0 0 30px rgba(0,238,255,0.08); }
+    .thinker-card.tension::after { background: linear-gradient(90deg, transparent, var(--cyan), transparent); }
+
+    .thinker-num { font-size: 0.62rem; color: var(--magenta-dim); letter-spacing: 0.2em; margin-bottom: 0.9rem; }
+    .thinker-num.cyan-num { color: rgba(0,238,255,0.5); }
+
+    .thinker-name {
+      font-family: var(--font-display); font-size: 1.6rem;
+      letter-spacing: 0.08em; margin-bottom: 0.4rem;
+      transition: color 0.2s, text-shadow 0.2s;
+    }
+    .thinker-card:hover .thinker-name { color: var(--magenta); text-shadow: 0 0 12px var(--magenta-glow); }
+    .thinker-card.tension:hover .thinker-name { color: var(--cyan); text-shadow: 0 0 12px rgba(0,238,255,0.5); }
+
+    .thinker-tags { font-size: 0.62rem; color: var(--green-dim); letter-spacing: 0.12em; margin-bottom: 0; }
+
+    .tension-body {
+      margin-top: 1.25rem;
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+    @media (max-width: 600px) { .tension-body { grid-template-columns: 1fr; } }
+
+    .tension-col-label {
+      font-size: 0.58rem; letter-spacing: 0.22em;
+      color: rgba(0,238,255,0.5); margin-bottom: 0.5rem;
+    }
+    .tension-text {
+      font-size: 0.75rem; line-height: 1.8;
+      color: rgba(0,255,65,0.45); font-family: var(--font-body);
+    }
+    .tension-fault {
+      margin-top: 1.25rem; padding-top: 1.25rem;
+      border-top: 1px solid rgba(0,238,255,0.15);
+      font-size: 0.75rem; line-height: 1.8;
+      color: rgba(0,238,255,0.5); font-family: var(--font-body);
+    }
+    .tension-fault-label {
+      font-size: 0.58rem; letter-spacing: 0.22em;
+      color: rgba(0,238,255,0.5); margin-bottom: 0.5rem;
+    }
+
+    /* ABOUT */
+    .about-text p {
+      font-family: var(--font-body); font-size: 0.88rem;
+      line-height: 2.1; color: rgba(0,255,65,0.55);
+      margin-bottom: 1.5rem; max-width: 660px;
+    }
+    .about-text p strong { color: var(--green); }
+    .about-tag {
+      display: inline-block; border: 1px solid var(--magenta-dim);
+      color: var(--magenta-dim); padding: 0.3rem 0.9rem;
+      font-size: 0.62rem; letter-spacing: 0.22em; margin-top: 0.5rem;
+    }
+
+    /* NOW */
+    .now-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 1rem;
+    }
+    .now-item {
+      border: 1px solid var(--border); padding: 1.25rem 1.5rem;
+      background: var(--bg-card); transition: border-color 0.25s, box-shadow 0.25s;
+    }
+    .now-item:hover { border-color: rgba(0,255,65,0.4); box-shadow: 0 0 16px rgba(0,255,65,0.07); }
+    .now-label { font-size: 0.58rem; letter-spacing: 0.28em; color: var(--magenta-dim); margin-bottom: 0.6rem; }
+    .now-value { font-size: 0.82rem; color: var(--green); line-height: 1.6; }
+
+    /* FREQUENCIES */
+    .freq-graph { display: flex; flex-wrap: wrap; gap: 0.7rem; margin-bottom: 1rem; }
+
+    .freq-node {
+      border: 1px solid var(--border);
+      padding: 0.45rem 0.95rem;
+      font-size: 0.68rem; letter-spacing: 0.14em;
+      cursor: pointer; transition: all 0.2s ease;
+      background: var(--bg-card); user-select: none;
+    }
+    .freq-node.tier-1 { font-size: 0.8rem; padding: 0.55rem 1.15rem; border-color: rgba(0,255,65,0.3); color: rgba(0,255,65,0.9); }
+    .freq-node.tier-2 { font-size: 0.72rem; padding: 0.5rem 1rem; }
+    .freq-node.tier-3 { font-size: 0.63rem; color: rgba(0,255,65,0.6); }
+
+    .freq-node:hover, .freq-node.active {
+      border-color: var(--magenta); color: var(--magenta);
+      background: var(--magenta-faint);
+      box-shadow: 0 0 18px var(--magenta-glow), inset 0 0 12px rgba(255,0,170,0.05);
+      text-shadow: 0 0 8px var(--magenta-glow);
+    }
+    .freq-node.related {
+      border-color: rgba(0,255,65,0.5); color: rgba(0,255,65,0.65);
+      background: var(--green-faint); box-shadow: 0 0 8px rgba(0,255,65,0.12);
+    }
+    .freq-node.dimmed { border-color: rgba(0,255,65,0.07); color: rgba(0,255,65,0.18); }
+
+    .freq-tooltip {
+      position: fixed;
+      background: rgba(1,8,6,0.97);
+      border: 1px solid var(--magenta-dim); border-left: 3px solid var(--magenta);
+      padding: 0.8rem 1.1rem; font-size: 0.68rem; line-height: 1.7;
+      color: var(--text-dim); max-width: 300px;
+      pointer-events: none; z-index: 500;
+      opacity: 0; transition: opacity 0.15s;
+      box-shadow: 0 0 20px rgba(255,0,170,0.15);
+    }
+    .freq-tooltip.visible { opacity: 1; }
+    .freq-hint { font-size: 0.6rem; color: var(--text-dim); letter-spacing: 0.15em; margin-top: 1.25rem; }
+
+    /* PARADOX ENGINE */
+    .paradox-intro {
+      font-family: var(--font-body); font-size: 0.8rem;
+      line-height: 2; color: rgba(0,255,65,0.45);
+      max-width: 600px; margin-bottom: 3rem;
+    }
+
+    .paradox-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .paradox-card {
+      border: 1px solid var(--border); background: var(--bg-card);
+      padding: 1.75rem; position: relative; overflow: hidden;
+      transition: border-color 0.3s, box-shadow 0.3s;
+      opacity: 0; transform: translateY(14px);
+    }
+    .paradox-card.visible { animation: fadeUp 0.45s ease forwards; }
+    .paradox-card::before {
+      content: ''; position: absolute;
+      top: 0; left: 0; width: 3px; height: 100%;
+      background: var(--magenta); box-shadow: 0 0 12px var(--magenta-glow);
+      opacity: 0; transition: opacity 0.3s;
+    }
+    .paradox-card:hover { border-color: rgba(0,238,255,0.35); box-shadow: 0 0 28px rgba(0,238,255,0.07); }
+    .paradox-card:hover::before { opacity: 1; }
+
+    .paradox-thinker { font-size: 0.58rem; letter-spacing: 0.25em; color: var(--magenta-dim); margin-bottom: 0.6rem; }
+    .paradox-statement {
+      font-family: var(--font-display); font-size: 1.45rem;
+      line-height: 1.3; letter-spacing: 0.04em; color: var(--green);
+      margin-bottom: 1rem; transition: color 0.3s, text-shadow 0.3s;
+    }
+    .paradox-card:hover .paradox-statement { color: var(--cyan); text-shadow: 0 0 10px rgba(0,238,255,0.4); }
+    .paradox-tension { font-size: 0.72rem; line-height: 1.75; color: rgba(0,255,65,0.45); font-style: italic; }
+    .paradox-divider { width: 2rem; height: 1px; background: var(--magenta); margin: 0.9rem 0; box-shadow: 0 0 6px var(--magenta-glow); }
+    .paradox-divider.cyan { background: var(--cyan); box-shadow: 0 0 6px rgba(0,238,255,0.4); }
+    .paradox-resolution { font-size: 0.68rem; line-height: 1.7; color: rgba(0,238,255,0.55); letter-spacing: 0.04em; }
+
+    /* UNRESOLVED VARIABLES */
+    .unresolved-list { display: flex; flex-direction: column; gap: 0; }
+
+    .unresolved-item {
+      padding: 2rem 0; border-bottom: 1px solid var(--border);
+      display: grid; grid-template-columns: 2.5rem 1fr;
+      gap: 1.5rem; align-items: start;
+      transition: background 0.2s;
+    }
+    .unresolved-item:first-child { border-top: 1px solid var(--border); }
+    .unresolved-item:hover { background: rgba(0,238,255,0.02); }
+
+    .unresolved-index {
+      font-size: 0.62rem; color: rgba(0,238,255,0.4);
+      letter-spacing: 0.2em; padding-top: 0.3rem;
+    }
+
+    .unresolved-question {
+      font-family: var(--font-display); font-size: 1.5rem;
+      line-height: 1.25; letter-spacing: 0.05em;
+      color: var(--green); margin-bottom: 0.75rem;
+      transition: color 0.3s;
+    }
+    .unresolved-item:hover .unresolved-question { color: var(--cyan); }
+
+    .unresolved-elaboration {
+      font-family: var(--font-body); font-size: 0.75rem;
+      line-height: 1.85; color: rgba(0,255,65,0.4);
+    }
+
+    .unresolved-status {
+      display: inline-block; margin-top: 0.75rem;
+      font-size: 0.58rem; letter-spacing: 0.2em;
+      color: rgba(0,238,255,0.4);
+      border: 1px solid rgba(0,238,255,0.15);
+      padding: 0.2rem 0.6rem;
+    }
+
+    /* COUNTERPOINT */
+    #counterpoint { position: relative; overflow: hidden; }
+    #counterpoint > * { position: relative; z-index: 1; }
+
+    .counterpoint-waveform {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      pointer-events: none; z-index: 0;
+    }
+    .counterpoint-waveform canvas {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+    }
+
+    .counterpoint-list { display: flex; flex-direction: column; gap: 0; }
+
+    .counterpoint-item {
+      padding: 2rem 0;
+      border-bottom: 1px solid rgba(0,255,65,0.12);
+      display: grid;
+      grid-template-columns: 2.5rem 1fr;
+      gap: 1.5rem; align-items: start;
+      transition: background 0.2s;
+    }
+    .counterpoint-item:first-child { border-top: 1px solid rgba(0,255,65,0.12); }
+    .counterpoint-item:hover { background: rgba(0,255,65,0.02); }
+
+    .counterpoint-marker {
+      font-size: 0.6rem; color: rgba(0,255,65,0.3);
+      letter-spacing: 0.15em; padding-top: 0.35rem;
+      font-family: var(--font-mono);
+    }
+
+    .counterpoint-observation {
+      font-family: var(--font-display);
+      font-size: 1.45rem; line-height: 1.3;
+      letter-spacing: 0.04em; color: var(--green);
+      margin-bottom: 0.8rem;
+      transition: color 0.3s;
+    }
+    .counterpoint-item:hover .counterpoint-observation {
+      color: rgba(0,255,65,0.85);
+    }
+
+    .counterpoint-elaboration {
+      font-family: var(--font-body);
+      font-size: 0.73rem; line-height: 1.9;
+      color: rgba(0,255,65,0.38);
+    }
+
+    /* READING */
+    .reading-item {
+      display: grid; grid-template-columns: 2rem 1fr auto;
+      gap: 1.25rem; align-items: start;
+      padding: 1.25rem 0; border-bottom: 1px solid var(--border);
+      transition: background 0.2s;
+    }
+    .reading-item:first-child { border-top: 1px solid var(--border); }
+    .reading-item:hover { background: rgba(255,0,170,0.02); }
+    .reading-num { font-size: 0.62rem; color: var(--magenta-dim); padding-top: 0.2rem; }
+    .reading-title { font-family: var(--font-display); font-size: 1.3rem; letter-spacing: 0.07em; margin-bottom: 0.25rem; }
+    .reading-author { font-size: 0.65rem; color: var(--text-dim); letter-spacing: 0.12em; margin-bottom: 0.5rem; }
+    .reading-note { font-size: 0.7rem; color: rgba(0,255,65,0.42); line-height: 1.65; font-style: italic; }
+    .reading-badge {
+      font-size: 0.58rem; letter-spacing: 0.15em; color: var(--magenta-dim);
+      border: 1px solid rgba(255,0,170,0.2); padding: 0.2rem 0.5rem;
+      white-space: nowrap; margin-top: 0.2rem;
+    }
+
+    /* CONNECT */
+    .connect-links { display: flex; gap: 1.25rem; flex-wrap: wrap; margin-top: 2rem; }
+    .connect-link {
+      border: 1px solid var(--border); padding: 0.7rem 1.75rem;
+      color: var(--green); text-decoration: none; font-size: 0.72rem;
+      letter-spacing: 0.2em; transition: all 0.25s;
+      background: var(--bg-card); position: relative; overflow: hidden;
+    }
+    .connect-link::before {
+      content: ''; position: absolute; bottom: 0; left: 0;
+      width: 0; height: 2px; background: var(--magenta);
+      box-shadow: 0 0 8px var(--magenta-glow); transition: width 0.3s;
+    }
+    .connect-link:hover {
+      border-color: var(--magenta-dim); color: var(--magenta);
+      box-shadow: 0 0 20px rgba(255,0,170,0.12); text-shadow: 0 0 8px var(--magenta-glow);
+    }
+    .connect-link:hover::before { width: 100%; }
+
+    footer {
+      padding: 2rem 2.5rem; border-top: 1px solid var(--border);
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 0.62rem; color: var(--text-dim); letter-spacing: 0.15em;
+      position: relative; z-index: 1;
+    }
+    footer span:last-child { color: var(--magenta-dim); }
+
+    /* ANIMATIONS */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes glitchReveal {
+      0%   { opacity: 0; transform: translateX(-6px) skewX(-1deg); filter: blur(3px); }
+      15%  { opacity: 1; transform: translateX(4px) skewX(1deg); }
+      30%  { transform: translateX(-2px) skewX(0); }
+      50%  { transform: translateX(1px); }
+      100% { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes rgbShift1 {
+      0%, 85%, 100% { opacity: 0; }
+      87%, 89% { opacity: 0.7; transform: translateX(-4px); }
+      88% { opacity: 0; }
+    }
+    @keyframes rgbShift2 {
+      0%, 85%, 100% { opacity: 0; }
+      87%, 89% { opacity: 0.7; transform: translateX(4px); }
+      88% { opacity: 0; }
+    }
+    @keyframes blink {
+      0%, 100% { opacity: 1; } 50% { opacity: 0; }
+    }
+
+    .scroll-reveal {
+      opacity: 0; transform: translateY(14px);
+      transition: opacity 0.55s ease, transform 0.55s ease;
+    }
+    .scroll-reveal.visible { opacity: 1; transform: translateY(0); }
+
+    @media (max-width: 640px) {
+      nav { padding: 1rem 1.25rem; }
+      .nav-links { gap: 0.75rem; }
+      section { padding: 5rem 1.25rem; }
+      #hero { padding: 0 1.25rem; padding-top: 5rem; }
+      footer { flex-direction: column; gap: 0.75rem; }
+    }
+  </style>
+</head>
+<body>
+  <div id="scroll-progress"></div>
+  <div class="noise-overlay"></div>
+  <canvas id="rain"></canvas>
+
+  <nav>
+    <a href="#hero" class="nav-logo">RQ //</a>
+    <ul class="nav-links">
+      <li><a href="#simulacra">// Simulacra</a></li>
+      <li><a href="#about">// Signal</a></li>
+      <li><a href="#frequencies">// Freq</a></li>
+      <li><a href="#paradox">// Paradox</a></li>
+      <li><a href="#unresolved">// Variables</a></li>
+      <li><a href="#counterpoint">// Counterpoint</a></li>
+      <li><a href="#reading">// Archive</a></li>
+      <li><a href="#connect">// Connect</a></li>
+    </ul>
+  </nav>
+
+  <!-- HERO -->
+  <section id="hero">
+    <div class="hero-grid"></div>
+    <div class="hero-vignette"></div>
+    <div class="hero-label">// entering the simulation &nbsp;&nbsp; ♩= 7/8</div>
+    <h1 class="hero-title" data-text="ROBERT&#10;QUICK">ROBERT<br>QUICK</h1>
+    <div class="hero-quote">
+      <blockquote>"The simulacrum is never what hides the truth — it is truth that hides the fact that there is none. The simulacrum is true."</blockquote>
+      <cite>— Jean Baudrillard, Simulacra and Simulation</cite>
+    </div>
+    <!-- THE ILLUSIVE MAN — grand staff, pedal point, voice leading -->
+    <div class="music-notation-container" style="border: 1px solid var(--border); padding: 2.5rem; background: var(--bg-card); position: relative; overflow: hidden; box-shadow: 0 0 20px rgba(0,255,65,0.05); max-width: 560px; opacity: 0; animation: fadeUp 0.6s ease forwards 1.4s;">
+      <div class="notation-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem;">
+        <div class="notation-label" style="font-size: 0.7rem; letter-spacing: 0.4em; color: var(--magenta); font-family: var(--font-display);">// SYSTEM_SPEC: HARMONIC_DECOMPOSITION [NODE_10]</div>
+        <div class="notation-status" style="font-size: 0.6rem; color: var(--green-dim); font-family: monospace;">STATUS: OPERATIONAL [DESCENT_LOOP]</div>
+      </div>
+      <svg viewBox="0 0 600 270" class="staff-svg" style="width: 100%; filter: drop-shadow(0 0 8px var(--green-glow));">
+
+        <!-- ══ STAFF LINES ══ -->
+        <!-- Treble: F5=40, D5=52, B4=64, G4=76, E4=88 | D4=100 ledger below -->
+        <g stroke="rgba(0,255,65,0.15)" stroke-width="1">
+          <path d="M50 40h500 M50 52h500 M50 64h500 M50 76h500 M50 88h500"/>
+        </g>
+        <!-- Bass -->
+        <g stroke="rgba(0,255,65,0.15)" stroke-width="1">
+          <path d="M50 140h500 M50 152h500 M50 164h500 M50 176h500 M50 188h500"/>
+        </g>
+
+        <!-- Grand staff brace -->
+        <line x1="50" y1="40" x2="50" y2="188" stroke="rgba(0,255,65,0.3)" stroke-width="1.5"/>
+
+        <!-- Treble clef -->
+        <text x="55" y="78" font-size="45" font-family="serif" fill="var(--green)" opacity="0.7">𝄞</text>
+        <!-- Bass clef -->
+        <text x="55" y="165" font-size="40" font-family="serif" fill="var(--green)" opacity="0.7">𝄢</text>
+
+        <!-- Time sig 7/8 treble -->
+        <text x="100" y="60" font-size="24" font-family="var(--font-display)" fill="var(--magenta)">7</text>
+        <text x="100" y="82" font-size="24" font-family="var(--font-display)" fill="var(--magenta)">8</text>
+        <!-- Time sig 7/8 bass -->
+        <text x="100" y="156" font-size="24" font-family="var(--font-display)" fill="var(--magenta)">7</text>
+        <text x="100" y="178" font-size="24" font-family="var(--font-display)" fill="var(--magenta)">8</text>
+
+        <!-- Opening barline -->
+        <line x1="128" y1="40"  x2="128" y2="88"  stroke="rgba(0,255,65,0.3)" stroke-width="1"/>
+        <line x1="128" y1="140" x2="128" y2="188" stroke="rgba(0,255,65,0.3)" stroke-width="1"/>
+
+        <!-- ══ BASS: SINGLE LOW A PEDAL ══ -->
+        <circle cx="160" cy="182" r="5.5" fill="var(--cyan)" opacity="0.8"/>
+        <line x1="155" y1="182" x2="155" y2="210" stroke="var(--cyan)" stroke-width="1.2" opacity="0.6"/>
+        <path d="M166 182 L520 182" stroke="var(--cyan)" stroke-width="0.8" fill="none" opacity="0.18" stroke-dasharray="5,4"/>
+        <text x="152" y="222" font-size="8" font-family="Share Tech Mono,monospace" fill="rgba(0,238,255,0.4)">A</text>
+        <text x="163" y="222" font-size="7" font-family="Share Tech Mono,monospace" fill="rgba(0,238,255,0.3)">// pedal</text>
+
+        <!-- ══ TREBLE: ALL 7 NOTES A–E–G–E–F–D–E ══ -->
+        <!-- Structural notes (A,G,F,D) = larger, brighter -->
+        <!-- Neighbor E notes = smaller, dimmer -->
+
+        <!-- 1. A4 = y70 — structural, magenta -->
+        <circle cx="150" cy="70" r="6" fill="var(--magenta)" opacity="0.95"/>
+        <line x1="156" y1="70" x2="156" y2="35" stroke="var(--green)" stroke-width="1.4" opacity="0.7"/>
+        <text x="144" y="112" font-size="8" font-family="Share Tech Mono,monospace" fill="rgba(255,0,170,0.65)">A</text>
+
+        <!-- 2. E4 = y88 — neighbor, small dim -->
+        <circle cx="205" cy="88" r="4" fill="var(--green-dim)" opacity="0.5"/>
+        <line x1="209" y1="88" x2="209" y2="60" stroke="var(--green)" stroke-width="1" opacity="0.35"/>
+        <text x="199" y="112" font-size="7" font-family="Share Tech Mono,monospace" fill="rgba(0,255,65,0.25)">E</text>
+
+        <!-- 3. G4 = y76 — structural, green -->
+        <circle cx="260" cy="76" r="6" fill="var(--green)" opacity="0.9"/>
+        <line x1="266" y1="76" x2="266" y2="41" stroke="var(--green)" stroke-width="1.4" opacity="0.7"/>
+        <text x="254" y="112" font-size="8" font-family="Share Tech Mono,monospace" fill="rgba(0,255,65,0.6)">G</text>
+
+        <!-- 4. E4 = y88 — neighbor, small dim -->
+        <circle cx="310" cy="88" r="4" fill="var(--green-dim)" opacity="0.5"/>
+        <line x1="314" y1="88" x2="314" y2="60" stroke="var(--green)" stroke-width="1" opacity="0.35"/>
+        <text x="304" y="112" font-size="7" font-family="Share Tech Mono,monospace" fill="rgba(0,255,65,0.25)">E</text>
+
+        <!-- 5. F4 = y82 — structural, green -->
+        <circle cx="360" cy="82" r="6" fill="var(--green)" opacity="0.9"/>
+        <line x1="366" y1="82" x2="366" y2="47" stroke="var(--green)" stroke-width="1.4" opacity="0.7"/>
+        <text x="354" y="112" font-size="8" font-family="Share Tech Mono,monospace" fill="rgba(0,255,65,0.6)">F</text>
+
+        <!-- 6. D4 = y100 — structural, below staff, ledger, cyan -->
+        <line x1="404" y1="100" x2="428" y2="100" stroke="rgba(0,255,65,0.4)" stroke-width="1"/>
+        <circle cx="416" cy="100" r="6" fill="var(--cyan)" opacity="0.9"/>
+        <line x1="422" y1="100" x2="422" y2="65" stroke="var(--green)" stroke-width="1.4" opacity="0.7"/>
+        <text x="410" y="118" font-size="8" font-family="Share Tech Mono,monospace" fill="rgba(0,238,255,0.65)">D</text>
+
+        <!-- 7. E4 = y88 — rebound, magenta, medium -->
+        <circle cx="475" cy="88" r="5" fill="var(--magenta)" opacity="0.7"/>
+        <line x1="480" y1="88" x2="480" y2="55" stroke="var(--green)" stroke-width="1.2" opacity="0.6"/>
+        <text x="469" y="112" font-size="8" font-family="Share Tech Mono,monospace" fill="rgba(255,0,170,0.5)">E</text>
+
+        <!-- ══ STRUCTURAL DESCENT PATH: A→G→F→D (over the top) ══ -->
+        <path d="M150 70 L260 76 L360 82 L416 100"
+          stroke="var(--magenta)" stroke-width="1.5"
+          fill="none" opacity="0.5" stroke-dasharray="5,2"/>
+
+        <!-- ══ REBOUND PATH: D→E ══ -->
+        <path d="M422 100 C 442 95 460 90 470 88"
+          stroke="var(--cyan)" stroke-width="1.2" fill="none" opacity="0.5" stroke-dasharray="2,2"/>
+
+        <!-- ══ RETURN LOOP ARROW ══ -->
+        <path d="M480 88 C 525 105 560 215 300 235 C 100 244 50 218 50 185"
+          stroke="var(--green-dim)" stroke-width="1" fill="none" opacity="0.28" stroke-dasharray="3,3"/>
+        <polygon points="46,177 50,189 56,178" fill="var(--green-dim)" opacity="0.38"/>
+
+        <!-- ══ FINAL DOUBLE BARLINE + REPEAT DOTS ══ -->
+        <line x1="548" y1="40"  x2="548" y2="88"  stroke="rgba(0,255,65,0.45)" stroke-width="1.5"/>
+        <line x1="555" y1="40"  x2="555" y2="88"  stroke="rgba(0,255,65,0.45)" stroke-width="3.5"/>
+        <line x1="548" y1="140" x2="548" y2="188" stroke="rgba(0,255,65,0.45)" stroke-width="1.5"/>
+        <line x1="555" y1="140" x2="555" y2="188" stroke="rgba(0,255,65,0.45)" stroke-width="3.5"/>
+        <circle cx="538" cy="58"  r="3.5" fill="var(--green)" opacity="0.6"/>
+        <circle cx="538" cy="70"  r="3.5" fill="var(--green)" opacity="0.6"/>
+        <circle cx="538" cy="156" r="3.5" fill="var(--green)" opacity="0.6"/>
+        <circle cx="538" cy="168" r="3.5" fill="var(--green)" opacity="0.6"/>
+
+        <!-- footer -->
+        <text x="390" y="258" font-size="8" font-family="monospace" fill="var(--green-dim)" opacity="0.45">// truth prevails</text>
+
+      </svg>
+      <div class="notation-analysis" style="font-size: 0.68rem; color: rgba(0,255,65,0.4); line-height: 1.9; margin-top: 1.5rem; border-top: 1px solid var(--border); padding-top: 1rem;">
+        // RHYTHM: 7/8 pulse (3+2+2). Asymmetry generates perpetual disquiet.<br>
+        // FOUNDATION: Low A pedal — brooding tonic anchor.<br>
+        // DESCENT: A–E–G–E–F–D–E. Structural path A→G→F→D. E is lower anchor between each step.<br>
+        // NOTE: stylized deconstruction, not transcription. the map is not the territory.
+      </div>
+    </div>    <div class="hero-scroll">↓ ATTACCA</div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- SIMULACRA -->
+  <section id="simulacra">
+    <div class="node-label">// node_01 — theoretical cartography</div>
+    <h2 class="section-title green">SIMULACRA</h2>
+    <p class="section-sub">Frameworks actively in use — not a reading list</p>
+    <div class="thinkers-grid">
+
+      <div class="thinker-card">
+        <div class="thinker-num">01 ——</div>
+        <div class="thinker-name">Michel Foucault</div>
+        <div class="thinker-tags">Power / Knowledge / Genealogy / Biopolitics</div>
+      </div>
+
+      <div class="thinker-card">
+        <div class="thinker-num">02 ——</div>
+        <div class="thinker-name">Jean Baudrillard</div>
+        <div class="thinker-tags">Simulacra / Hyperreality / Seduction / Sign Value</div>
+      </div>
+
+      <div class="thinker-card">
+        <div class="thinker-num">03 ——</div>
+        <div class="thinker-name">Deleuze &amp; Guattari</div>
+        <div class="thinker-tags">Rhizomatics / Becoming / Desiring-Machines / Immanence</div>
+      </div>
+
+      <div class="thinker-card">
+        <div class="thinker-num">04 ——</div>
+        <div class="thinker-name">Friedrich Nietzsche</div>
+        <div class="thinker-tags">Will to Power / Perspectivism / Genealogy of Morals</div>
+      </div>
+
+      <div class="thinker-card">
+        <div class="thinker-num">05 ——</div>
+        <div class="thinker-name">Baruch Spinoza</div>
+        <div class="thinker-tags">Substance Monism / Conatus / Affect / Deus sive Natura</div>
+      </div>
+
+      <!-- TENSION CARD: Baudrillard vs Debord -->
+      <div class="thinker-card">
+        <div class="thinker-num">06 ——</div>
+        <div class="thinker-name">Mark Fisher</div>
+        <div class="thinker-tags">Capitalist Realism / Hauntology / Affective Capture</div>
+      </div>
+
+      <div class="thinker-card">
+        <div class="thinker-num">07 ——</div>
+        <div class="thinker-name">Thomas Metzinger</div>
+        <div class="thinker-tags">Phenomenal Self-Model / Being No One / Consciousness as Simulation</div>
+      </div>
+
+      <div class="thinker-card">
+        <div class="thinker-num">08 ——</div>
+        <div class="thinker-name">David Chalmers</div>
+        <div class="thinker-tags">The Hard Problem / Phenomenal Consciousness / The Explanatory Gap</div>
+      </div>
+
+      <div class="thinker-card">
+        <div class="thinker-num">09 ——</div>
+        <div class="thinker-name">Derek Parfit</div>
+        <div class="thinker-tags">Personal Identity / Reasons & Persons / Reductionism about the Self</div>
+      </div>
+
+      <div class="thinker-card">
+        <div class="thinker-num">10 ——</div>
+        <div class="thinker-name">Douglas Hofstadter</div>
+        <div class="thinker-tags">Strange Loops / GEB / Emergent Self / Tangled Hierarchies</div>
+      </div>
+
+      <div class="thinker-card tension">
+        <div class="thinker-num cyan-num">TENSION ——</div>
+        <div class="thinker-name">Baudrillard vs. Debord</div>
+        <div class="thinker-tags">Hyperreality / The Integrated Spectacle / Simulation / Representation</div>
+        <div class="tension-body">
+          <div>
+            <div class="tension-col-label">// DEBORD HOLDS</div>
+            <div class="tension-text">The spectacle is still representation — images mediating real social relations. The real exists beneath the image, distorted but recoverable. Détournement works because there is something to détourne toward. Critique retains purchase.</div>
+          </div>
+          <div>
+            <div class="tension-col-label">// BAUDRILLARD ANSWERS</div>
+            <div class="tension-text">Debord didn't go far enough. The spectacle has collapsed into the real — there is no longer a "beneath." The image doesn't distort reality; it replaces it. Détournement is absorbed as content. The map has eaten the territory entirely.</div>
+          </div>
+        </div>
+        <div class="tension-fault">
+          <div class="tension-fault-label">// THE FAULT LINE</div>
+          Whether critique is still structurally possible — or whether the Integrated Spectacle has made critique itself a spectacle. Debord ended in silence. Baudrillard kept writing. Neither fully resolved the contradiction they identified.
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- SIGNAL -->
+  <section id="about">
+    <div class="node-label">// node_02 — signal</div>
+    <h2 class="section-title magenta">WHO I AM</h2>
+    <div class="about-text scroll-reveal">
+      <p>I think at the intersection of <strong>formal systems, critical theory, and technology</strong> — less interested in cataloguing frameworks than in finding where they break down, contradict each other, or illuminate something that resists easy naming.</p>
+      <p>The questions that hold my attention aren't the ones with clean answers. They're the ones that keep generating new problems the longer you sit with them.</p>
+      <div class="about-tag">NAVIGATING THE REAL</div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- NOW -->
+  <section id="now">
+    <div class="node-label">// node_03 — descent log</div>
+    <h2 class="section-title green">DESCENT LOG</h2>
+    <p class="section-sub">Current coordinates — updated when the signal shifts</p>
+    <div class="now-grid scroll-reveal">
+      <div class="now-item">
+        <div class="now-label">// CURRENTLY READING</div>
+        <div class="now-value">Gödel, Escher, Bach — Hofstadter</div>
+      </div>
+      <div class="now-item">
+        <div class="now-label">// CURRENTLY STRESS-TESTING</div>
+        <div class="now-value">Metzinger's no-self thesis against Chalmers' hard problem. One says the subject is a model. The other says the model is running in something.</div>
+      </div>
+      <div class="now-item">
+        <div class="now-label">// CURRENTLY UNRESOLVED</div>
+        <div class="now-value">Whether Fisher's hauntology is a critical tool or a symptom of the thing it diagnoses.</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- FREQUENCIES -->
+  <section id="frequencies">
+    <div class="node-label">// node_04 — resonances</div>
+    <h2 class="section-title magenta">FREQUENCIES</h2>
+    <p class="section-sub">Domains of inquiry — hover to reveal systemic dependencies</p>
+    <div class="freq-graph" id="freqGraph"></div>
+    <div class="freq-hint">// hover a node to activate its relational field</div>
+    <div class="freq-tooltip" id="freqTooltip"></div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- PARADOX ENGINE -->
+  <section id="paradox">
+    <div class="node-label">// node_05 — the paradox engine</div>
+    <h2 class="section-title cyan">PARADOX ENGINE</h2>
+    <p class="section-sub">The load-bearing contradictions of continental thought</p>
+    <p class="paradox-intro scroll-reveal">
+      Every major framework in this archive is built on a productive contradiction — a central tension that generates its explanatory power precisely because it cannot be resolved. These aren't bugs. They're the engine. Each card maps the core paradox, the tension that sustains it, and what becomes thinkable when you stop trying to solve it.
+    </p>
+    <div class="paradox-grid">
+      <div class="paradox-card">
+        <div class="paradox-thinker">FOUCAULT</div>
+        <div class="paradox-statement">Power is everywhere. Therefore nowhere to stand outside it.</div>
+        <div class="paradox-divider"></div>
+        <div class="paradox-tension">If every position is produced by power, including the critic's, then critique itself is a power effect. The genealogist cannot escape the genealogy of genealogy.</div>
+        <div class="paradox-divider cyan"></div>
+        <div class="paradox-resolution">What becomes thinkable: critique without foundation. You don't need a view from nowhere. Resistance is always local, contingent, provisional — and that's enough.</div>
+      </div>
+      <div class="paradox-card">
+        <div class="paradox-thinker">BAUDRILLARD</div>
+        <div class="paradox-statement">There is no real left. But he wrote books about it.</div>
+        <div class="paradox-divider"></div>
+        <div class="paradox-tension">If the simulacrum has fully replaced the real — then Baudrillard's own texts are simulacra, referencing a real that by his own account no longer exists.</div>
+        <div class="paradox-divider cyan"></div>
+        <div class="paradox-resolution">What becomes thinkable: a theory that performs its own condition. The seduction of the text is that it enacts what it describes. Whether that's profound or a trap is itself undecidable.</div>
+      </div>
+      <div class="paradox-card">
+        <div class="paradox-thinker">DERRIDA</div>
+        <div class="paradox-statement">All language defers meaning. Including this sentence.</div>
+        <div class="paradox-divider"></div>
+        <div class="paradox-tension">Différance — the claim that meaning is always deferred, never present — must itself be stated in language that appears to mean something. The deconstruction of presence requires presence to proceed.</div>
+        <div class="paradox-divider cyan"></div>
+        <div class="paradox-resolution">What becomes thinkable: writing as a practice of vigilance rather than assertion. Not saying less — saying with greater awareness of what saying cannot do.</div>
+      </div>
+      <div class="paradox-card">
+        <div class="paradox-thinker">DEBORD</div>
+        <div class="paradox-statement">The spectacle absorbs all critique. This critique included.</div>
+        <div class="paradox-divider"></div>
+        <div class="paradox-tension">The Integrated Spectacle pre-absorbs opposition, packages dissent as content, sells revolt as aesthetic. Any critique of the spectacle becomes spectacle. Debord knew this. It drove him to silence.</div>
+        <div class="paradox-divider cyan"></div>
+        <div class="paradox-resolution">What becomes thinkable: situationist practice over theory. Détournement, drift, direct action — doing things the spectacle can't easily metabolize into content.</div>
+      </div>
+      <div class="paradox-card">
+        <div class="paradox-thinker">DELEUZE &amp; GUATTARI</div>
+        <div class="paradox-statement">Escape all structures. Here is our 600-page structure for doing so.</div>
+        <div class="paradox-divider"></div>
+        <div class="paradox-tension">Anti-Oedipus argues for liberation from every arborescent, hierarchical, territorializing structure — organized as an arborescent, hierarchical, territorializing argument.</div>
+        <div class="paradox-divider cyan"></div>
+        <div class="paradox-resolution">What becomes thinkable: the rhizome as a discipline for movement, not a description of structure. Lateral, non-teleological, always in the middle.</div>
+      </div>
+      <div class="paradox-card">
+        <div class="paradox-thinker">NIETZSCHE</div>
+        <div class="paradox-statement">There are no facts, only interpretations. That's a fact.</div>
+        <div class="paradox-divider"></div>
+        <div class="paradox-tension">Perspectivism — the claim that all knowledge is interpretive, situated, driven by the will to power — seems to assert a non-perspectival truth about the nature of truth.</div>
+        <div class="paradox-divider cyan"></div>
+        <div class="paradox-resolution">What becomes thinkable: honesty about power. Every claim to truth is also a will. The question isn't whether you're interpreting — it's whether you're strong enough to affirm it.</div>
+      </div>
+      <div class="paradox-card">
+        <div class="paradox-thinker">FISHER</div>
+        <div class="paradox-statement">We cannot imagine alternatives. That failure of imagination is the system working as designed.</div>
+        <div class="paradox-divider"></div>
+        <div class="paradox-tension">Capitalist Realism isn't enforced by propaganda or prohibition — it operates through the foreclosure of imaginative possibility. The system wins not when it defeats opposition but when opposition becomes literally unthinkable. The hyperreal absorbed the outside.</div>
+        <div class="paradox-divider cyan"></div>
+        <div class="paradox-resolution">What becomes thinkable: hauntology — the ghosts of futures that never arrived. Fisher's melancholy is diagnostic, not defeatist. What we mourn tells us what was real.</div>
+      </div>
+
+      <div class="paradox-card">
+        <div class="paradox-thinker">METZINGER</div>
+        <div class="paradox-statement">There is no self having the experience. Only the experience, modelling a self.</div>
+        <div class="paradox-divider"></div>
+        <div class="paradox-tension">The phenomenal self-model is the brain's simulation of a subject — so transparent, so seamless, that the system mistakes the model for the thing. There is no one behind the avatar. The Cartesian theatre has no audience. And yet here we are, convinced otherwise.</div>
+        <div class="paradox-divider cyan"></div>
+        <div class="paradox-resolution">What becomes thinkable: Baudrillard's simulacrum runs deeper than culture — it runs on wetware. The map replacing the territory isn't just a social phenomenon. It's the structure of subjectivity itself.</div>
+      </div>
+
+      <div class="paradox-card">
+        <div class="paradox-thinker">CHALMERS</div>
+        <div class="paradox-statement">Even a perfect functional account of mind leaves untouched why there is something it is like to be anything at all.</div>
+        <div class="paradox-divider"></div>
+        <div class="paradox-tension">You can explain every neural correlate, every information process, every behaviour — and still not have explained why the lights are on. The hard problem isn't a gap in current science. It's a structural remainder that functional accounts cannot reach by definition.</div>
+        <div class="paradox-divider cyan"></div>
+        <div class="paradox-resolution">What becomes thinkable: experience as the one thing that stubbornly resists simulation theory. If Metzinger is right that the self is a model, Chalmers asks — but what is the model running in? Something is having the illusion. That something is the hard problem.</div>
+      </div>
+
+      <div class="paradox-card">
+        <div class="paradox-thinker">HOFSTADTER</div>
+        <div class="paradox-statement">The self is a strange loop — a pattern that perceives itself perceiving itself, tangled into the illusion of a perceiver.</div>
+        <div class="paradox-divider"></div>
+        <div class="paradox-tension">GEB's central move: meaning and consciousness emerge from systems complex enough to model themselves. The loop is not a defect — it's the mechanism. But a loop that generates the self by self-reference has no floor, no ground, no outside. Turtles all the way down.</div>
+        <div class="paradox-divider cyan"></div>
+        <div class="paradox-resolution">What becomes thinkable: the self as fugue — structured, patterned, recognisable, generative, and yet at no point reducible to any single voice. Hofstadter is the one who makes this feel like music rather than a trap.</div>
+      </div>
+
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- UNRESOLVED VARIABLES -->
+  <section id="unresolved">
+    <div class="node-label">// node_06 — unresolved variables</div>
+    <h2 class="section-title cyan">UNRESOLVED VARIABLES</h2>
+    <p class="section-sub">Questions I keep returning to without resolution</p>
+    <div class="unresolved-list scroll-reveal">
+
+      <div class="unresolved-item">
+        <div class="unresolved-index">01</div>
+        <div>
+          <div class="unresolved-question">At what point does critique of a system become structurally indistinguishable from participation in it?</div>
+          <div class="unresolved-elaboration">Every framework on this site was developed inside the academy — itself a system of power, credentialing, and knowledge production. The tools we use to analyse domination were forged within it. Whether that contaminates the analysis or simply describes its condition is a question I haven't resolved.</div>
+          <div class="unresolved-status">// STATUS: OPEN</div>
+        </div>
+      </div>
+
+      <div class="unresolved-item">
+        <div class="unresolved-index">02</div>
+        <div>
+          <div class="unresolved-question">Whether the rhizome is a genuine alternative to arborescent thought — or just a more flattering description of the same movement.</div>
+          <div class="unresolved-elaboration">Deleuze and Guattari's rhizome is compelling as a conceptual image. But in practice, every attempt to think or act rhizomatically seems to produce new hierarchies, new centres, new roots. The question is whether this is a failure of execution or a structural impossibility built into the concept itself.</div>
+          <div class="unresolved-status">// STATUS: OPEN</div>
+        </div>
+      </div>
+
+      <div class="unresolved-item">
+        <div class="unresolved-index">03</div>
+        <div>
+          <div class="unresolved-question">If the Integrated Spectacle pre-absorbs all opposition, what does resistance actually look like in practice — not in theory?</div>
+          <div class="unresolved-elaboration">Debord ended in silence. Baudrillard kept publishing. Neither answer feels adequate. The question isn't academic: if every act of resistance is metabolised as content, then the choice isn't between resistance and complicity — it's between different forms of complicity. I don't know what to do with that.</div>
+          <div class="unresolved-status">// STATUS: OPEN</div>
+        </div>
+      </div>
+
+      <div class="unresolved-item">
+        <div class="unresolved-index">04</div>
+        <div>
+          <div class="unresolved-question">If the self is a model, and the system forecloses alternatives, and experience stubbornly remains — what exactly is it that's trapped?</div>
+          <div class="unresolved-elaboration">Metzinger says there is no self behind the phenomenal self-model. Fisher says we cannot imagine outside the system. Chalmers says something is having the experience regardless. These three positions don't resolve — they triangulate something that has no name yet. The trapped thing isn't a subject. But it isn't nothing either.</div>
+          <div class="unresolved-status">// STATUS: OPEN</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- COUNTERPOINT -->
+  <section id="counterpoint">
+    <div class="counterpoint-waveform"><canvas id="waveCanvas"></canvas></div>
+    <div class="node-label">// node_09 — counterpoint</div>
+    <h2 class="section-title green">COUNTERPOINT</h2>
+    <p class="section-sub">Where music complicates the theory — and vice versa</p>
+    <div class="counterpoint-list scroll-reveal">
+
+      <div class="counterpoint-item">
+        <div class="counterpoint-marker">♩</div>
+        <div>
+          <div class="counterpoint-observation">Voice leading teaches that the most elegant movement between two notes is the smallest one. Critical theory teaches that small movements reproduce existing structures. Both are true.</div>
+          <div class="counterpoint-elaboration">Classical voice leading — no parallel fifths, no augmented leaps, resolve tendency tones by step — is a constraint system that produces beauty through limitation. The same logic that makes a Bach chorale work is the logic Foucault describes in the normalization of bodies. The discipline is the same. The value judgement about it is not.</div>
+        </div>
+      </div>
+
+      <div class="counterpoint-item">
+        <div class="counterpoint-marker">♩</div>
+        <div>
+          <div class="counterpoint-observation">Improvisation is the practice of working inside a constraint system until you find the exact moment to leave it — which may be the most honest description of resistance I've encountered.</div>
+          <div class="counterpoint-elaboration">Not a grand break, not a refusal. You play the changes until you hear the opening, and then you move. The constraint doesn't disappear — it's what makes the departure meaningful. Debord never quite said what resistance looks like in practice. Every jazz musician knows.</div>
+        </div>
+      </div>
+
+      <div class="counterpoint-item">
+        <div class="counterpoint-marker">♩</div>
+        <div>
+          <div class="counterpoint-observation">Sacred music synchronises bodies, breath, and attention toward a shared object. Whether that's transcendence or the oldest form of biopolitics probably depends on who's in the room.</div>
+          <div class="counterpoint-elaboration">Four-part SATB harmony requires each voice to subordinate its own line to the whole. The soprano doesn't know what the bass is doing — she just knows her part. The congregation doesn't analyse the chord progression — they just feel the resolve. Foucault would have something to say about that. So would anyone who has felt it work on them.</div>
+        </div>
+      </div>
+
+      <div class="counterpoint-item">
+        <div class="counterpoint-marker">♩</div>
+        <div>
+          <div class="counterpoint-observation">Playing for people who aren't listening is its own kind of simulation. The music becomes ambient signal — present without being received, real without being heard.</div>
+          <div class="counterpoint-elaboration">A piano bar is not a concert hall. The music exists not to be attended to but to fill the space with the impression of music. Baudrillard would recognise it immediately: the sign of cultural refinement without the referent. You learn things about the spectacle from inside it that theory can only approximate from outside.</div>
+        </div>
+      </div>
+
+      <div class="counterpoint-item">
+        <div class="counterpoint-marker">♩</div>
+        <div>
+          <div class="counterpoint-observation">You can know a chord progression analytically and feel it resolve in your body. These are different kinds of knowing. The second one doesn't reduce to the first.</div>
+          <div class="counterpoint-elaboration">When a dominant seventh resolves to the tonic you feel it before you name it — the tension, the inevitability, the release. Phenomenology has a vocabulary for this. But the vocabulary is always a step behind the thing itself. Some knowledge only comes through the hands.</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- READING -->
+  <section id="reading">
+    <div class="node-label">// node_07 — archive</div>
+    <h2 class="section-title green">READING LIST</h2>
+    <p class="section-sub">Curated entry points — in the order I'd recommend them</p>
+    <div class="scroll-reveal">
+      <div class="reading-item">
+        <div class="reading-num">01</div>
+        <div><div class="reading-title">Simulacra and Simulation</div><div class="reading-author">Jean Baudrillard</div><div class="reading-note">Start here. The framework through which everything else on this site is filtered. Read slowly.</div></div>
+        <div class="reading-badge">ENTRY POINT</div>
+      </div>
+      <div class="reading-item">
+        <div class="reading-num">02</div>
+        <div><div class="reading-title">Discipline and Punish</div><div class="reading-author">Michel Foucault</div><div class="reading-note">The panopticon as a diagram of power. You will never look at institutions the same way.</div></div>
+        <div class="reading-badge">FOUNDATIONAL</div>
+      </div>
+      <div class="reading-item">
+        <div class="reading-num">03</div>
+        <div><div class="reading-title">The Society of the Spectacle</div><div class="reading-author">Guy Debord</div><div class="reading-note">Read this, then immediately read Comments on the Society of the Spectacle. The second book is where the real Debord lives.</div></div>
+        <div class="reading-badge">ESSENTIAL</div>
+      </div>
+      <div class="reading-item">
+        <div class="reading-num">04</div>
+        <div><div class="reading-title">Anti-Oedipus</div><div class="reading-author">Deleuze &amp; Guattari</div><div class="reading-note">Difficult. Rewarding. A machine for thinking about desire, capital, and social production that still has no equal.</div></div>
+        <div class="reading-badge">ADVANCED</div>
+      </div>
+      <div class="reading-item">
+        <div class="reading-num">05</div>
+        <div><div class="reading-title">Of Grammatology</div><div class="reading-author">Jacques Derrida</div><div class="reading-note">The text that destabilizes text. Read the Spivak introduction first — it's indispensable.</div></div>
+        <div class="reading-badge">ADVANCED</div>
+      </div>
+      <div class="reading-item">
+        <div class="reading-num">06</div>
+        <div><div class="reading-title">On the Genealogy of Morality</div><div class="reading-author">Friedrich Nietzsche</div><div class="reading-note">The clearest Nietzsche. A masterclass in how values are constructed, not discovered.</div></div>
+        <div class="reading-badge">PARALLEL TRACK</div>
+      </div>
+      <div class="reading-item">
+        <div class="reading-num">07</div>
+        <div><div class="reading-title">Dialectic of Enlightenment</div><div class="reading-author">Adorno &amp; Horkheimer</div><div class="reading-note">Why reason became its own opposite. The Frankfurt School at its most urgent.</div></div>
+        <div class="reading-badge">FRANKFURT SCHOOL</div>
+      </div>
+      <div class="reading-item">
+        <div class="reading-num">08</div>
+        <div><div class="reading-title">The Shallows</div><div class="reading-author">Nicholas Carr</div><div class="reading-note">The one accessible book that applies the entire theoretical framework above to the internet. A useful bridge.</div></div>
+        <div class="reading-badge">APPLIED</div>
+      </div>
+      <div class="reading-item">
+        <div class="reading-num">09</div>
+        <div><div class="reading-title">Gödel, Escher, Bach</div><div class="reading-author">Douglas Hofstadter</div><div class="reading-note">The book that makes strange loops feel inevitable and beautiful simultaneously. Read it slowly. It rewards the patience. The fugues are not decorative.</div></div>
+        <div class="reading-badge">ESSENTIAL</div>
+      </div>
+      <div class="reading-item">
+        <div class="reading-num">10</div>
+        <div><div class="reading-title">Capitalist Realism</div><div class="reading-author">Mark Fisher</div><div class="reading-note">Short, devastating, and precise. The diagnosis of why imagining alternatives feels impossible — and what that foreclosure tells us about the system producing it.</div></div>
+        <div class="reading-badge">CONTEMPORARY</div>
+      </div>
+      <div class="reading-item">
+        <div class="reading-num">11</div>
+        <div><div class="reading-title">Being No One</div><div class="reading-author">Thomas Metzinger</div><div class="reading-note">Dense but necessary. The argument that the self is a transparent self-model — the brain's simulation of a subject so seamless it mistakes the model for the thing.</div></div>
+        <div class="reading-badge">ADVANCED</div>
+      </div>
+      <div class="reading-item">
+        <div class="reading-num">12</div>
+        <div><div class="reading-title">The Conscious Mind</div><div class="reading-author">David Chalmers</div><div class="reading-note">Where the hard problem gets its canonical formulation. Read alongside Metzinger — one dissolves the self, the other refuses to dissolve the experience.</div></div>
+        <div class="reading-badge">ADVANCED</div>
+      </div>
+      <div class="reading-item">
+        <div class="reading-num">13</div>
+        <div><div class="reading-title">Reasons and Persons</div><div class="reading-author">Derek Parfit</div><div class="reading-note">What ethical navigation looks like when personal identity is thin or illusory. Parfit's conclusion — that we are less separate than we think — is quietly radical.</div></div>
+        <div class="reading-badge">FOUNDATIONAL</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- CONNECT -->
+  <section id="connect">
+    <div class="node-label">// node_08 — network</div>
+    <h2 class="section-title green">ESTABLISH CONNECTION</h2>
+    <p class="section-sub">Reach out. The signal is open.</p>
+    <div class="connect-links scroll-reveal">
+      <a href="https://github.com/robertquick" class="connect-link" target="_blank" rel="noopener">→ GitHub</a>
+      <a href="mailto:rob@robertquick.org" class="connect-link">→ Email</a>
+    </div>
+  </section>
+
+  <footer>
+    <span>© Robert Quick</span>
+    <span>// the territory resists the map</span>
+  </footer>
+
+  <script>
+  // ── SCROLL PROGRESS ──────────────────────────────────────────────────────────
+  const progressBar = document.getElementById('scroll-progress');
+  window.addEventListener('scroll', () => {
+    const scrollTop = window.scrollY;
+    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    progressBar.style.width = (scrollTop / docHeight * 100) + '%';
+  }, { passive: true });
+
+  // ── MATRIX RAIN ──────────────────────────────────────────────────────────────
+  (function() {
+    const canvas = document.getElementById('rain');
+    const ctx = canvas.getContext('2d');
+    let W, H, cols, drops;
+    const chars = 'アイウエオカキクケコサシスセソタチツテトナニヌネノ0123456789ABCDEF∂∫∑∏√∞≠≤≥∈∉⊂⊃';
+
+    function init() {
+      W = canvas.width  = window.innerWidth;
+      H = canvas.height = window.innerHeight;
+      cols  = Math.floor(W / 22);
+      drops = Array.from({length: cols}, () => Math.random() * -80);
+    }
+
+    function draw() {
+      ctx.fillStyle = 'rgba(1,8,6,0.055)';
+      ctx.fillRect(0, 0, W, H);
+      ctx.font = '14px Share Tech Mono, monospace';
+      for (let i = 0; i < cols; i++) {
+        const ch = chars[Math.floor(Math.random() * chars.length)];
+        const x  = i * 22;
+        const y  = drops[i] * 22;
+        if (Math.random() < 0.018)      ctx.fillStyle = '#ff00aa';
+        else if (Math.random() < 0.035) ctx.fillStyle = 'rgba(0,238,255,0.8)';
+        else if (Math.random() < 0.06)  ctx.fillStyle = 'rgba(0,255,65,0.95)';
+        else                             ctx.fillStyle = 'rgba(0,255,65,0.3)';
+        ctx.fillText(ch, x, y);
+        if (y > H && Math.random() > 0.975) drops[i] = 0;
+        drops[i] += 0.35;
+      }
+    }
+
+    init();
+    window.addEventListener('resize', init);
+    setInterval(draw, 48);
+  })();
+
+  // ── RELATIONAL FREQUENCIES ────────────────────────────────────────────────────
+  const freqNodes = [
+    { id: 'systemic-critique',        label: 'Systemic Critique',        tier: 1, relations: ['post-structuralism','biopolitics','algorithmic-hegemony','political-economy','surveillance'],           desc: 'The Frankfurt School tradition — Adorno, Horkheimer, Marcuse. Critique of reason, capital, and the culture industry as interlocking systems of domination.' },
+    { id: 'post-structuralism',       label: 'Post-Structuralism',       tier: 1, relations: ['systemic-critique','philosophy-of-language','structural-decomposition','ontology','phenomenology'],     desc: 'Derrida, Foucault, Deleuze. The destabilization of fixed meaning, the decentering of the subject, the primacy of difference over identity.' },
+    { id: 'technology-power',         label: 'Technology & Power',       tier: 1, relations: ['surveillance','algorithmic-hegemony','biopolitics','systems-theory','integrated-spectacle'],            desc: 'How technical systems encode and reproduce power relations. From Foucault\'s dispositif to algorithmic governance and platform capitalism.' },
+    { id: 'biopolitics',              label: 'Biopolitics',              tier: 1, relations: ['systemic-critique','technology-power','surveillance','political-economy','ontology'],                   desc: 'Foucault\'s analysis of how power operates through the management of life itself — populations, bodies, health, sexuality as objects of governance.' },
+    { id: 'surveillance',             label: 'Surveillance',             tier: 1, relations: ['biopolitics','technology-power','algorithmic-hegemony','political-economy','systemic-critique'],       desc: 'From Bentham\'s panopticon to Zuboff\'s surveillance capitalism. The gaze as normalization — increasingly distributed, algorithmic, pre-emptive.' },
+    { id: 'algorithmic-hegemony',     label: 'Algorithmic Hegemony',     tier: 2, relations: ['media-theory','technology-power','surveillance','political-economy','integrated-spectacle'],            desc: 'The extension of Gramscian hegemony into computational systems. How recommendation engines and platform logics naturalize particular modes of seeing and being.' },
+    { id: 'integrated-spectacle',     label: 'The Integrated Spectacle', tier: 2, relations: ['media-theory','algorithmic-hegemony','hyperreality','sensory-architectures','systemic-critique'],     desc: 'Debord\'s later formulation — the synthesis of concentrated and diffuse spectacle into a total environment where critique is pre-absorbed as content.' },
+    { id: 'hyperreality',             label: 'Hyperreality',             tier: 2, relations: ['media-theory','integrated-spectacle','sensory-architectures','algorithmic-hegemony'],                  desc: 'Baudrillard\'s terminal condition — the map precedes the territory. Not false consciousness but the disappearance of the distinction between true and false.' },
+    { id: 'media-theory',             label: 'Media Theory',             tier: 2, relations: ['algorithmic-hegemony','integrated-spectacle','hyperreality','technology-power','sensory-architectures'], desc: 'McLuhan, Baudrillard, Kittler. The medium as message, the collapse of representation into simulation, the materiality of information infrastructure.' },
+    { id: 'political-economy',        label: 'Political Economy',        tier: 2, relations: ['systemic-critique','biopolitics','algorithmic-hegemony','surveillance','technology-power'],             desc: 'Marx as infrastructure. The material conditions underwriting ideological superstructure — capital flows, labor relations, the economic substrate of power.' },
+    { id: 'ontology',                 label: 'Ontology',                 tier: 2, relations: ['post-structuralism','phenomenology','philosophy-of-language','systems-theory','structural-decomposition'], desc: 'Questions of being — Heidegger\'s Dasein, Spinoza\'s substance monism, Deleuze\'s immanence. What exists, and what counts as real?' },
+    { id: 'structural-decomposition', label: 'Structural Decomposition', tier: 3, relations: ['post-structuralism','philosophy-of-language','ontology','systemic-critique'],                          desc: 'Derrida\'s deconstructive practice — locating the internal contradictions that any structure requires to maintain coherence. Not destruction but exposure.' },
+    { id: 'philosophy-of-language',   label: 'Philosophy of Language',   tier: 3, relations: ['post-structuralism','structural-decomposition','ontology','systemic-critique'],                        desc: 'Saussure\'s structural linguistics as the foundation of post-structuralism. Derrida\'s différance — meaning deferred, never present.' },
+    { id: 'phenomenology',            label: 'Phenomenology',            tier: 3, relations: ['ontology','post-structuralism','sensory-architectures','philosophy-of-language'],                      desc: 'Husserl\'s intentionality, Heidegger\'s being-in-the-world, Merleau-Ponty\'s embodied perception. The structure of lived experience as ground of inquiry.' },
+    { id: 'systems-theory',           label: 'Systems Theory',           tier: 3, relations: ['ontology','technology-power','biopolitics','post-structuralism'],                                       desc: 'Luhmann\'s autopoiesis — social systems as self-reproducing communication. A formal counterpoint to the genealogical tradition; different vocabulary, same terrain.' },
+    { id: 'capitalist-realism',     label: 'Capitalist Realism',      tier: 1, relations: ['systemic-critique','integrated-spectacle','algorithmic-hegemony','political-economy','hauntology'],         desc: 'Fisher\'s thesis: it is easier to imagine the end of the world than the end of capitalism. The system wins by foreclosing the imaginative conditions for its own critique.' },
+    { id: 'hauntology',              label: 'Hauntology',               tier: 2, relations: ['capitalist-realism','integrated-spectacle','hyperreality','media-theory'],                                       desc: 'Fisher after Derrida: the present haunted by futures that never arrived. The ghosts of possibility — what was lost when alternatives became unthinkable.' },
+    { id: 'hard-problem',            label: 'The Hard Problem',         tier: 1, relations: ['phenomenal-self','strange-loops','phenomenology','ontology'],                                                    desc: 'Chalmers: even a complete functional account of mind leaves untouched why there is something it is like to be anything at all. The explanatory gap that won\'t close.' },
+    { id: 'phenomenal-self',         label: 'Phenomenal Self-Model',    tier: 1, relations: ['hard-problem','strange-loops','ontology','surveillance','hyperreality'],                                         desc: 'Metzinger: the self is a transparent self-model — a simulation so seamless the system mistakes it for the thing. There is no one behind the avatar. Only the model.' },
+    { id: 'strange-loops',           label: 'Strange Loops',            tier: 1, relations: ['phenomenal-self','hard-problem','systems-theory','ontology','philosophy-of-language'],                           desc: 'Hofstadter: consciousness emerges from systems complex enough to model themselves. The self is a pattern perceiving its own perception — a tangled hierarchy with no ground floor.' },
+    { id: 'personal-identity',       label: 'Personal Identity',        tier: 2, relations: ['phenomenal-self','hard-problem','ontology','political-economy'],                                                 desc: 'Parfit: we are less separately existing than we think. Personal identity is not what matters. Reductionism about the self has radical ethical implications.' },
+    { id: 'sensory-architectures',    label: 'Sensory Architectures',    tier: 3, relations: ['media-theory','integrated-spectacle','hyperreality','phenomenology'],                                   desc: 'Rancière\'s distribution of the sensible — how the organization of perception is itself a political act. What can be seen, heard, thought, said in a given order.' },
+  ];
+
+  const nodeMap = {};
+  freqNodes.forEach(n => nodeMap[n.id] = n);
+  const graph   = document.getElementById('freqGraph');
+  const tooltip = document.getElementById('freqTooltip');
+
+  freqNodes.forEach(node => {
+    const el = document.createElement('div');
+    el.className   = `freq-node tier-${node.tier}`;
+    el.dataset.id  = node.id;
+    el.textContent = node.label;
+    graph.appendChild(el);
+  });
+
+  graph.addEventListener('mouseover', e => {
+    const node = e.target.closest('.freq-node');
+    if (!node) return;
+    const id   = node.dataset.id;
+    const data = nodeMap[id];
+    graph.querySelectorAll('.freq-node').forEach(el => {
+      const eid = el.dataset.id;
+      const base = `freq-node tier-${nodeMap[eid].tier}`;
+      el.className = base + (eid === id ? ' active' : data.relations.includes(eid) ? ' related' : ' dimmed');
+    });
+    tooltip.textContent = data.desc;
+    tooltip.classList.add('visible');
+  });
+  graph.addEventListener('mousemove', e => {
+    tooltip.style.left = (e.clientX + 18) + 'px';
+    tooltip.style.top  = (e.clientY - 10) + 'px';
+  });
+  graph.addEventListener('mouseleave', () => {
+    graph.querySelectorAll('.freq-node').forEach(el => {
+      el.className = `freq-node tier-${nodeMap[el.dataset.id].tier}`;
+    });
+    tooltip.classList.remove('visible');
+  });
+
+  // ── SCROLL REVEALS ────────────────────────────────────────────────────────────
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting) return;
+      const el    = entry.target;
+      const delay = parseInt(el.dataset.delay || 0);
+      setTimeout(() => el.classList.add('visible'), delay);
+      obs.unobserve(el);
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.thinker-card').forEach((el, i) => {
+    el.dataset.delay = (i % 3) * 90;
+    obs.observe(el);
+  });
+  document.querySelectorAll('.paradox-card').forEach((el, i) => {
+    el.dataset.delay = i * 75;
+    obs.observe(el);
+  });
+  document.querySelectorAll('.scroll-reveal').forEach(el => obs.observe(el));
+
+  // ── COUNTERPOINT WAVEFORM ──────────────────────────────────────────────────
+  // the illusive man was right about one thing: the map is not the territory.
+  (function() {
+    const canvas = document.getElementById('waveCanvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const section = document.getElementById('counterpoint');
+    let W, H, t = 0, running = false;
+
+    function resize() {
+      W = canvas.width  = section.offsetWidth;
+      H = canvas.height = section.offsetHeight;
+    }
+
+    function draw() {
+      if (!running) return;
+      ctx.clearRect(0, 0, W, H);
+      const waves = [
+        { freq: 0.007, amp: 20, speed: 0.011, phase: 0,   color: 'rgba(0,255,65,0.06)' },
+        { freq: 0.012, amp: 14, speed: 0.017, phase: 1.2, color: 'rgba(0,255,65,0.04)' },
+        { freq: 0.020, amp: 9,  speed: 0.008, phase: 2.5, color: 'rgba(0,255,65,0.03)' },
+        { freq: 0.005, amp: 25, speed: 0.006, phase: 0.7, color: 'rgba(0,238,255,0.025)'},
+      ];
+      waves.forEach(w => {
+        ctx.beginPath();
+        ctx.strokeStyle = w.color;
+        ctx.lineWidth = 1.2;
+        for (let x = 0; x <= W; x += 2) {
+          const y = H / 2
+            + Math.sin(x * w.freq + t * w.speed + w.phase) * w.amp
+            + Math.sin(x * w.freq * 2.3 + t * w.speed * 1.7) * (w.amp * 0.3);
+          x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+      });
+      t++;
+      requestAnimationFrame(draw);
+    }
+
+    const waveObs = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting && !running) {
+          running = true;
+          resize();
+          draw();
+          waveObs.disconnect();
+        }
+      });
+    }, { threshold: 0.05 });
+    waveObs.observe(section);
+    window.addEventListener('resize', () => { if (running) resize(); });
+  })();
+  </script>
+</body>
+</html>

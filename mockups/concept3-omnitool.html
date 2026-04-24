@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>robertquick.org // omni</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=VT323&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #02060a;
+    --me-orange: #ff8c1a;
+    --me-orange-dim: rgba(255,140,26,0.55);
+    --me-orange-faint: rgba(255,140,26,0.18);
+    --me-cyan: #58e1ff;
+    --me-cyan-dim: rgba(88,225,255,0.5);
+    --green-faint: rgba(0,255,65,0.20);
+    --pink: #ff00aa;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--me-orange);
+    font-family: 'Share Tech Mono', monospace;
+    overflow: hidden;
+  }
+
+  /* Background: dim matrix rain, very faint */
+  #rain {
+    position: fixed; inset: 0;
+    z-index: 0;
+    opacity: 0.08;
+    pointer-events: none;
+  }
+  /* Soft scanlines */
+  body::before {
+    content: ""; position: fixed; inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      rgba(0,0,0,0) 0px,
+      rgba(0,0,0,0) 2px,
+      rgba(0,0,0,0.18) 3px,
+      rgba(0,0,0,0) 4px
+    );
+    z-index: 1; pointer-events: none;
+  }
+  /* CRT vignette */
+  body::after {
+    content: ""; position: fixed; inset: 0;
+    background: radial-gradient(ellipse at center, transparent 45%, rgba(0,0,0,0.7) 100%);
+    z-index: 2; pointer-events: none;
+  }
+
+  /* HUD frame: corner brackets */
+  .hud {
+    position: fixed;
+    inset: 18px;
+    z-index: 3;
+    pointer-events: none;
+  }
+  .hud .corner {
+    position: absolute;
+    width: 28px; height: 28px;
+    border-color: var(--me-orange-dim);
+    border-style: solid;
+    border-width: 0;
+  }
+  .hud .corner.tl { top: 0; left: 0; border-top-width: 2px; border-left-width: 2px; }
+  .hud .corner.tr { top: 0; right: 0; border-top-width: 2px; border-right-width: 2px; }
+  .hud .corner.bl { bottom: 0; left: 0; border-bottom-width: 2px; border-left-width: 2px; }
+  .hud .corner.br { bottom: 0; right: 0; border-bottom-width: 2px; border-right-width: 2px; }
+
+  .hud-label {
+    position: absolute;
+    color: var(--me-orange-dim);
+    font-size: 11px;
+    letter-spacing: 0.22em;
+  }
+  .hud-label.top    { top: 4px; left: 50%; transform: translateX(-50%); }
+  .hud-label.bottom { bottom: 4px; left: 50%; transform: translateX(-50%); }
+  .hud-label.left   { top: 50%; left: 6px; transform: translateY(-50%) rotate(-90deg); transform-origin: left center; }
+  .hud-label.right  { top: 50%; right: 6px; transform: translateY(-50%) rotate(90deg); transform-origin: right center; }
+
+  /* Header bar */
+  .topbar {
+    position: fixed;
+    top: 32px; left: 0; right: 0;
+    text-align: center;
+    z-index: 4;
+    color: var(--me-orange-dim);
+    font-size: 11px;
+    letter-spacing: 0.3em;
+  }
+  .topbar .live {
+    color: var(--me-cyan);
+  }
+  .topbar .live::before {
+    content: "◆ "; color: var(--me-cyan);
+  }
+
+  /* Center stage */
+  main {
+    position: relative;
+    z-index: 3;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* The ring */
+  .ring-wrap {
+    position: relative;
+    width: min(82vmin, 640px);
+    aspect-ratio: 1 / 1;
+  }
+  .ring-svg {
+    width: 100%; height: 100%;
+    overflow: visible;
+    filter: drop-shadow(0 0 12px rgba(255,140,26,0.25));
+  }
+  .seg {
+    fill: rgba(255,140,26,0.05);
+    stroke: var(--me-orange);
+    stroke-width: 1.5;
+    cursor: pointer;
+    transition: fill 0.18s ease, stroke 0.18s ease;
+  }
+  .seg:hover {
+    fill: rgba(255,140,26,0.22);
+    stroke: var(--me-cyan);
+    filter: drop-shadow(0 0 8px rgba(88,225,255,0.6));
+  }
+  .seg-label {
+    fill: var(--me-orange);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px;
+    letter-spacing: 0.15em;
+    pointer-events: none;
+    text-anchor: middle;
+    dominant-baseline: middle;
+  }
+  .seg:hover + .seg-label { fill: var(--me-cyan); }
+
+  /* Outer tick marks */
+  .tick { stroke: var(--me-orange-dim); stroke-width: 1; }
+  .tick.major { stroke: var(--me-orange); stroke-width: 1.5; }
+
+  /* Center hub */
+  .hub-bg { fill: rgba(0,0,0,0.85); stroke: var(--me-orange); stroke-width: 1.5; }
+  .hub-inner { fill: none; stroke: var(--me-orange-dim); stroke-width: 1; stroke-dasharray: 3 4; }
+  .hub-name {
+    fill: var(--me-orange);
+    font-family: 'VT323', monospace;
+    font-size: 26px;
+    letter-spacing: 0.08em;
+    text-anchor: middle;
+    dominant-baseline: middle;
+  }
+  .hub-sub {
+    fill: var(--me-cyan-dim);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.32em;
+    text-anchor: middle;
+  }
+
+  /* Spinning ring overlays */
+  .ring-rotating {
+    transform-origin: 50% 50%;
+    animation: rot 32s linear infinite;
+    fill: none;
+    stroke: var(--me-orange-faint);
+    stroke-dasharray: 2 6;
+  }
+  .ring-rotating.rev {
+    animation: rotrev 48s linear infinite;
+    stroke: rgba(88,225,255,0.18);
+  }
+  @keyframes rot { to { transform: rotate(360deg); } }
+  @keyframes rotrev { to { transform: rotate(-360deg); } }
+
+  /* Readout panel — appears on hover */
+  .readout {
+    position: fixed;
+    left: 50%;
+    bottom: 64px;
+    transform: translateX(-50%);
+    z-index: 5;
+    width: min(560px, 88vw);
+    border: 1px solid var(--me-orange);
+    background: rgba(2,6,10,0.85);
+    color: var(--me-orange);
+    padding: 0.6rem 1rem;
+    font-size: 13px;
+    letter-spacing: 0.06em;
+    line-height: 1.5;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+    box-shadow: 0 0 18px rgba(255,140,26,0.18);
+  }
+  .readout.show { opacity: 1; }
+  .readout .key { color: var(--me-cyan); margin-right: 0.5em; }
+  .readout .empty { color: var(--me-orange-dim); }
+
+  /* Cursor blink */
+  .cursor {
+    display: inline-block;
+    width: 0.55em;
+    height: 1.05em;
+    background: var(--me-orange);
+    vertical-align: -2px;
+    margin-left: 2px;
+    box-shadow: 0 0 8px rgba(255,140,26,0.7);
+    animation: blink 1.05s steps(2,start) infinite;
+  }
+  @keyframes blink { to { background: transparent; box-shadow: none; } }
+</style>
+</head>
+<body>
+<canvas id="rain"></canvas>
+
+<div class="hud">
+  <span class="corner tl"></span>
+  <span class="corner tr"></span>
+  <span class="corner bl"></span>
+  <span class="corner br"></span>
+  <span class="hud-label top">OMNI-TOOL // v7.8</span>
+  <span class="hud-label bottom">SELECT VECTOR</span>
+  <span class="hud-label left">SIGNAL OK</span>
+  <span class="hud-label right">RELAY: ROBERTQUICK</span>
+</div>
+
+<div class="topbar"><span class="live">LIVE</span> &nbsp;//&nbsp; <span id="clock">--:--:--</span> UTC &nbsp;//&nbsp; SESSION ACTIVE</div>
+
+<main>
+  <div class="ring-wrap">
+    <svg class="ring-svg" viewBox="-200 -200 400 400" id="ring"></svg>
+  </div>
+</main>
+
+<div class="readout" id="readout">
+  <span class="empty">// hover a vector — the omni-tool will read it out</span>
+</div>
+
+<script>
+  // Vector definitions: 7 segments around the ring
+  const vectors = [
+    { id: 'simulacra',    label: 'SIMULACRA',    desc: 'frameworks under stress',          status: 'ACTIVE'   },
+    { id: 'frequencies',  label: 'FREQUENCIES',  desc: 'domains of inquiry',               status: 'ACTIVE'   },
+    { id: 'paradox',      label: 'PARADOX',      desc: 'load-bearing contradictions',      status: 'OPEN'     },
+    { id: 'counterpoint', label: 'COUNTERPOINT', desc: 'music as critique',                status: 'TUNED'    },
+    { id: 'archive',      label: 'ARCHIVE',      desc: 'annotated reading',                status: 'INDEXED'  },
+    { id: 'now',          label: 'NOW',          desc: 'current state',                    status: 'STREAMING'},
+    { id: 'connect',      label: 'CONNECT',      desc: 'open channels',                    status: 'LISTEN'   },
+  ];
+
+  const ring = document.getElementById('ring');
+  const readout = document.getElementById('readout');
+  const N = vectors.length;
+  const innerR = 70;   // hub radius
+  const midR   = 140;  // segment outer
+  const labelR = 105;  // label radius
+  const startAngle = -Math.PI / 2; // top
+  const sweep = (2 * Math.PI) / N;
+  const gap = 0.025; // radians of gap between segments
+
+  // Build segments
+  vectors.forEach((v, i) => {
+    const a0 = startAngle + i * sweep + gap/2;
+    const a1 = startAngle + (i+1) * sweep - gap/2;
+    const x0 = innerR * Math.cos(a0), y0 = innerR * Math.sin(a0);
+    const x1 = midR   * Math.cos(a0), y1 = midR   * Math.sin(a0);
+    const x2 = midR   * Math.cos(a1), y2 = midR   * Math.sin(a1);
+    const x3 = innerR * Math.cos(a1), y3 = innerR * Math.sin(a1);
+    const large = (a1 - a0) > Math.PI ? 1 : 0;
+
+    const d = `M ${x0} ${y0} L ${x1} ${y1} A ${midR} ${midR} 0 ${large} 1 ${x2} ${y2} L ${x3} ${y3} A ${innerR} ${innerR} 0 ${large} 0 ${x0} ${y0} Z`;
+
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', d);
+    path.setAttribute('class', 'seg');
+    path.setAttribute('data-id', v.id);
+    path.addEventListener('click', () => { window.location.href = '/' + v.id; });
+    path.addEventListener('mouseenter', () => showReadout(v));
+    path.addEventListener('mouseleave', clearReadout);
+    ring.appendChild(path);
+
+    const am = (a0 + a1) / 2;
+    const lx = labelR * Math.cos(am);
+    const ly = labelR * Math.sin(am);
+    const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    text.setAttribute('x', lx);
+    text.setAttribute('y', ly);
+    text.setAttribute('class', 'seg-label');
+    text.textContent = v.label;
+    ring.appendChild(text);
+  });
+
+  // Tick marks around outside
+  for (let i = 0; i < 60; i++) {
+    const a = (i / 60) * 2 * Math.PI;
+    const major = i % 5 === 0;
+    const r0 = 165, r1 = major ? 178 : 173;
+    const x0 = r0 * Math.cos(a), y0 = r0 * Math.sin(a);
+    const x1 = r1 * Math.cos(a), y1 = r1 * Math.sin(a);
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    line.setAttribute('x1', x0); line.setAttribute('y1', y0);
+    line.setAttribute('x2', x1); line.setAttribute('y2', y1);
+    line.setAttribute('class', 'tick' + (major ? ' major' : ''));
+    ring.appendChild(line);
+  }
+
+  // Outer rotating dashed rings
+  const r1 = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  r1.setAttribute('cx', 0); r1.setAttribute('cy', 0); r1.setAttribute('r', 188);
+  r1.setAttribute('class', 'ring-rotating');
+  ring.appendChild(r1);
+
+  const r2 = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  r2.setAttribute('cx', 0); r2.setAttribute('cy', 0); r2.setAttribute('r', 195);
+  r2.setAttribute('class', 'ring-rotating rev');
+  ring.appendChild(r2);
+
+  // Hub
+  const hub = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  hub.setAttribute('cx', 0); hub.setAttribute('cy', 0); hub.setAttribute('r', innerR - 4);
+  hub.setAttribute('class', 'hub-bg');
+  ring.appendChild(hub);
+
+  const hubInner = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  hubInner.setAttribute('cx', 0); hubInner.setAttribute('cy', 0); hubInner.setAttribute('r', innerR - 14);
+  hubInner.setAttribute('class', 'hub-inner');
+  ring.appendChild(hubInner);
+
+  const name = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  name.setAttribute('x', 0); name.setAttribute('y', -8);
+  name.setAttribute('class', 'hub-name');
+  name.textContent = 'R. QUICK';
+  ring.appendChild(name);
+
+  const sub = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  sub.setAttribute('x', 0); sub.setAttribute('y', 14);
+  sub.setAttribute('class', 'hub-sub');
+  sub.textContent = '7/8';
+  ring.appendChild(sub);
+
+  // Readout
+  function showReadout(v) {
+    readout.innerHTML =
+      `<div><span class="key">VECTOR ▸</span>${v.label}</div>` +
+      `<div><span class="key">SUMMARY ▸</span>${v.desc}</div>` +
+      `<div><span class="key">STATUS  ▸</span>${v.status}</div>`;
+    readout.classList.add('show');
+  }
+  function clearReadout() {
+    readout.classList.remove('show');
+    setTimeout(() => {
+      if (!readout.classList.contains('show')) {
+        readout.innerHTML = '<span class="empty">// hover a vector — the omni-tool will read it out</span>';
+        readout.classList.add('show');
+        setTimeout(() => { if (!readout.matches(':hover')) readout.classList.remove('show'); }, 0);
+      }
+    }, 180);
+  }
+  // initial idle state
+  readout.classList.add('show');
+
+  // Clock
+  const clock = document.getElementById('clock');
+  function tick() {
+    const d = new Date();
+    const p = (n) => n.toString().padStart(2, '0');
+    clock.textContent = `${p(d.getUTCHours())}:${p(d.getUTCMinutes())}:${p(d.getUTCSeconds())}`;
+  }
+  tick(); setInterval(tick, 1000);
+
+  // Keyboard: 1-7 selects, arrows rotate focus
+  let focusIdx = 0;
+  function focusSeg(i) {
+    focusIdx = (i + N) % N;
+    const segs = ring.querySelectorAll('.seg');
+    segs.forEach((s, j) => s.style.fill = j === focusIdx ? 'rgba(255,140,26,0.22)' : '');
+    showReadout(vectors[focusIdx]);
+  }
+  document.addEventListener('keydown', (e) => {
+    if (e.key >= '1' && e.key <= '7') {
+      const i = parseInt(e.key, 10) - 1;
+      window.location.href = '/' + vectors[i].id;
+    } else if (e.key === 'ArrowRight' || e.key === 'Tab') { e.preventDefault(); focusSeg(focusIdx + 1); }
+      else if (e.key === 'ArrowLeft') { focusSeg(focusIdx - 1); }
+      else if (e.key === 'Enter') { window.location.href = '/' + vectors[focusIdx].id; }
+  });
+
+  // Matrix rain
+  (function() {
+    const canvas = document.getElementById('rain');
+    const ctx = canvas.getContext('2d');
+    let W, H, cols, drops;
+    const chars = 'アイウエオカキクケコサシスセソタチツテトナニヌネノ0123456789ABCDEF∂∫∑∏√∞≠≤≥∈∉⊂⊃';
+    function init() {
+      W = canvas.width = window.innerWidth;
+      H = canvas.height = window.innerHeight;
+      cols = Math.floor(W / 22);
+      drops = Array.from({length: cols}, () => Math.random() * -80);
+    }
+    function draw() {
+      ctx.fillStyle = 'rgba(2,6,10,0.07)';
+      ctx.fillRect(0, 0, W, H);
+      ctx.font = '14px "Share Tech Mono", monospace';
+      for (let i = 0; i < cols; i++) {
+        const ch = chars[Math.floor(Math.random() * chars.length)];
+        const x = i * 22;
+        const y = drops[i] * 22;
+        if (Math.random() < 0.02)       ctx.fillStyle = '#ff8c1a';
+        else if (Math.random() < 0.04)  ctx.fillStyle = 'rgba(88,225,255,0.7)';
+        else                            ctx.fillStyle = 'rgba(255,140,26,0.5)';
+        ctx.fillText(ch, x, y);
+        if (y > H && Math.random() > 0.975) drops[i] = 0;
+        drops[i]++;
+      }
+      requestAnimationFrame(draw);
+    }
+    init(); draw();
+    window.addEventListener('resize', init);
+  })();
+</script>
+</body>
+</html>

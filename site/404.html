@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>404 // VECTOR NOT YET ACQUIRED</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=VT323&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #02060a;
+    --orange: #ff8c1a;
+    --orange-dim: rgba(255,140,26,0.55);
+    --orange-faint: rgba(255,140,26,0.18);
+    --cyan: #58e1ff;
+    --cyan-dim: rgba(88,225,255,0.55);
+    --red: #ff2e4d;
+    --white: #f4ecdf;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--orange);
+    font-family: 'Share Tech Mono', monospace;
+    overflow: hidden;
+  }
+  #rain { position: fixed; inset: 0; z-index: 0; opacity: 0.06; pointer-events: none; }
+  body::before {
+    content: ""; position: fixed; inset: 0;
+    background: repeating-linear-gradient(0deg, rgba(0,0,0,0) 0px, rgba(0,0,0,0) 2px, rgba(0,0,0,0.18) 3px, rgba(0,0,0,0) 4px);
+    z-index: 1; pointer-events: none;
+  }
+  body::after {
+    content: ""; position: fixed; inset: 0;
+    background: radial-gradient(ellipse at center, transparent 45%, rgba(0,0,0,0.7) 100%);
+    z-index: 2; pointer-events: none;
+  }
+
+  main {
+    position: relative; z-index: 3;
+    height: 100%;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center;
+    padding: 2rem;
+  }
+
+  .stamp {
+    color: var(--red);
+    border: 1.5px solid var(--red);
+    padding: 0.4rem 1rem;
+    letter-spacing: 0.3em;
+    font-size: 12px;
+    margin-bottom: 1.5rem;
+    animation: blink-soft 2.6s infinite;
+    clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+  }
+  @keyframes blink-soft { 50% { opacity: 0.4; } }
+
+  h1 {
+    font-family: 'VT323', monospace;
+    font-size: clamp(48px, 9vw, 96px);
+    color: var(--white);
+    letter-spacing: 0.05em;
+    line-height: 0.95;
+    margin-bottom: 0.5rem;
+    text-shadow: 0 0 14px rgba(255,140,26,0.4);
+  }
+  h1 .err { color: var(--red); }
+
+  .sub {
+    color: var(--orange-dim);
+    letter-spacing: 0.18em;
+    font-size: 13px;
+    margin-bottom: 2rem;
+  }
+
+  .codex {
+    width: min(540px, 90vw);
+    border: 1px solid var(--orange);
+    background:
+      linear-gradient(rgba(2,6,10,0.92), rgba(2,6,10,0.92)),
+      repeating-linear-gradient(60deg, rgba(255,140,26,0.06) 0 1px, transparent 1px 14px),
+      repeating-linear-gradient(-60deg, rgba(255,140,26,0.06) 0 1px, transparent 1px 14px);
+    clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
+    padding: 1rem 1.2rem;
+    text-align: left;
+    box-shadow: inset 3px 0 0 var(--orange);
+    font-size: 13px;
+    line-height: 1.6;
+    margin-bottom: 1.8rem;
+  }
+  .codex .row { display: flex; gap: 0.8em; }
+  .codex .key { color: var(--cyan); min-width: 130px; }
+  .codex .val { color: var(--orange); }
+  .codex .title {
+    color: var(--white);
+    letter-spacing: 0.18em;
+    border-bottom: 1px solid var(--cyan-dim);
+    padding-bottom: 4px;
+    margin-bottom: 6px;
+    font-size: 14px;
+  }
+
+  .return {
+    color: var(--cyan);
+    text-decoration: none;
+    border: 1px solid var(--cyan);
+    padding: 0.5rem 1.2rem;
+    letter-spacing: 0.2em;
+    font-size: 12px;
+    transition: background 0.15s;
+    clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+  }
+  .return:hover {
+    background: rgba(88,225,255,0.12);
+    color: var(--white);
+  }
+
+  .ticker {
+    position: fixed;
+    bottom: 14px; left: 0; right: 0;
+    z-index: 4;
+    color: var(--orange-faint);
+    font-size: 10.5px;
+    letter-spacing: 0.18em;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+<canvas id="rain"></canvas>
+
+<main>
+  <div class="stamp">▶ ERROR // SIGNAL LOST</div>
+  <h1>4<span class="err">0</span>4</h1>
+  <div class="sub">// VECTOR NOT YET ACQUIRED</div>
+
+  <div class="codex">
+    <div class="title">▶ DIAGNOSTIC //</div>
+    <div class="row"><span class="key">▶ REQUEST //</span><span class="val" id="path">/</span></div>
+    <div class="row"><span class="key">▶ STATUS //</span><span class="val">UNDER CONSTRUCTION</span></div>
+    <div class="row"><span class="key">▶ NOTE //</span><span class="val">vector exists in the manifest, has not yet been transmitted</span></div>
+    <div class="row"><span class="key">▶ ETA //</span><span class="val">soon</span></div>
+  </div>
+
+  <a class="return" href="/">◀ RETURN TO OMNI-TOOL</a>
+</main>
+
+<div class="ticker">// the territory resists the map &nbsp;·&nbsp; signal will resume</div>
+
+<script>
+  document.getElementById('path').textContent = location.pathname;
+
+  // Matrix rain (orange-tinted, very faint)
+  (function() {
+    const canvas = document.getElementById('rain');
+    const ctx = canvas.getContext('2d');
+    let W, H, cols, drops;
+    const chars = 'アイウエオカキクケコサシスセソタチツテトナニヌネノ0123456789ABCDEF∂∫∑∏√∞≠≤≥∈∉⊂⊃';
+    function init() {
+      W = canvas.width = window.innerWidth;
+      H = canvas.height = window.innerHeight;
+      cols = Math.floor(W / 22);
+      drops = Array.from({length: cols}, () => Math.random() * -80);
+    }
+    function draw() {
+      ctx.fillStyle = 'rgba(2,6,10,0.07)';
+      ctx.fillRect(0, 0, W, H);
+      ctx.font = '14px "Share Tech Mono", monospace';
+      for (let i = 0; i < cols; i++) {
+        const ch = chars[Math.floor(Math.random() * chars.length)];
+        const x = i * 22, y = drops[i] * 22;
+        if (Math.random() < 0.02)       ctx.fillStyle = '#ffae5e';
+        else if (Math.random() < 0.04)  ctx.fillStyle = 'rgba(88,225,255,0.7)';
+        else                            ctx.fillStyle = 'rgba(255,140,26,0.45)';
+        ctx.fillText(ch, x, y);
+        if (y > H && Math.random() > 0.975) drops[i] = 0;
+        drops[i]++;
+      }
+      requestAnimationFrame(draw);
+    }
+    init(); draw();
+    window.addEventListener('resize', init);
+  })();
+</script>
+</body>
+</html>
