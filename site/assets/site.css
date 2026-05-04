@@ -95,16 +95,15 @@ body::after {
   font-size: 11px;
   letter-spacing: 0.22em;
 }
-.hud-label.top    { top: 4px; left: 50%; transform: translateX(-50%); }
-.hud-label.bottom { bottom: 4px; left: 50%; transform: translateX(-50%); }
+.hud-label.top    { top: 6px; left: 50%; transform: translateX(-50%); white-space: nowrap; }
+.hud-label.bottom { bottom: 38px; left: 50%; transform: translateX(-50%); white-space: nowrap; }
 .hud-label.left   { top: 50%; left: 6px; transform: translateY(-50%) rotate(-90deg); transform-origin: left center; }
 .hud-label.right  { top: 50%; right: 6px; transform: translateY(-50%) rotate(90deg); transform-origin: right center; }
 
-/* Top bar */
+/* Top bar — right-aligned so it doesn't crash into return-omni or hud-label-top */
 .topbar {
   position: fixed;
-  top: 32px; left: 0; right: 0;
-  text-align: center;
+  top: 32px; right: 56px;
   z-index: 4;
   color: var(--orange-dim);
   font-size: 11px;
@@ -118,8 +117,8 @@ body::after {
 /* Return-to-omni link top-left */
 .return-omni {
   position: fixed;
-  top: 30px; left: 60px;
-  z-index: 4;
+  top: 30px; left: 56px;
+  z-index: 5;
   font-size: 11px;
   letter-spacing: 0.18em;
   color: var(--cyan-dim);
@@ -128,10 +127,10 @@ body::after {
 }
 .return-omni:hover { color: var(--cyan); text-shadow: none; }
 
-/* Comm widget bottom-right */
+/* Comm widget — top-right under topbar to clear the bottom ticker zone */
 .comm {
   position: fixed;
-  bottom: 36px; right: 56px;
+  top: 56px; right: 56px;
   z-index: 4;
   font-size: 10px;
   letter-spacing: 0.18em;
@@ -145,7 +144,7 @@ body::after {
 }
 .comm .key { color: var(--cyan-dim); }
 
-/* Telemetry ticker */
+/* Telemetry ticker — sits at very bottom, hud-label sits above it */
 .ticker {
   position: fixed;
   bottom: 14px; left: 0; right: 0;
@@ -171,7 +170,7 @@ main {
   z-index: 3;
   max-width: 920px;
   margin: 0 auto;
-  padding: 110px 2rem 80px;
+  padding: 130px 2rem 100px;
 }
 
 .page-header {
@@ -209,6 +208,7 @@ main {
   max-width: 70ch;
 }
 .intro strong { color: var(--white); font-weight: normal; }
+.intro + .intro, .intro p + p { margin-top: 0.9rem; }
 
 /* Codex card primitive */
 .codex-card {
@@ -298,31 +298,58 @@ main {
 @media (max-width: 600px) { .tension-cols { grid-template-columns: 1fr; } }
 
 /* ── Paradox cards ─────────────────────────── */
-.paradox-card .thinker {
+.paradox-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1rem;
+}
+.paradox-card .num {
   color: var(--white);
   font-family: 'VT323', monospace;
-  font-size: 22px;
+  font-size: 24px;
   letter-spacing: 0.18em;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
-.paradox-card .statement {
+.paradox-card .paradox-statement {
   color: var(--orange-bright);
   font-size: 14px;
   font-style: italic;
-  margin-bottom: 12px;
+  margin-bottom: 0;
   line-height: 1.5;
 }
-.paradox-card .label {
+.paradox-card .paradox-divider {
+  height: 1px;
+  background: var(--orange-faint);
+  margin: 0.9rem 0;
+}
+.paradox-card .paradox-divider.cyan {
+  background: var(--cyan-faint);
+}
+.paradox-card .paradox-tension {
+  color: var(--orange);
+  font-size: 13px;
+  line-height: 1.65;
+}
+.paradox-card .paradox-tension::before {
+  content: "// TENSION";
+  display: block;
+  color: var(--orange-dim);
+  font-size: 10.5px;
+  letter-spacing: 0.22em;
+  margin-bottom: 6px;
+}
+.paradox-card .paradox-resolution {
+  color: var(--white);
+  font-size: 13px;
+  line-height: 1.65;
+}
+.paradox-card .paradox-resolution::before {
+  content: "// WHAT BECOMES THINKABLE";
+  display: block;
   color: var(--cyan);
   font-size: 10.5px;
   letter-spacing: 0.22em;
-  margin: 8px 0 4px;
-}
-.paradox-card .tension,
-.paradox-card .resolution {
-  color: var(--orange);
-  font-size: 13px;
-  line-height: 1.6;
+  margin-bottom: 6px;
 }
 
 /* ── Reading list ─────────────────────────── */
@@ -381,45 +408,60 @@ main {
 .counterpoint-list { display: flex; flex-direction: column; gap: 1rem; }
 .counterpoint-item {
   display: grid;
-  grid-template-columns: 50px 1fr;
-  gap: 1rem;
-  padding: 1rem 1.1rem;
-  border-left: 2px solid var(--green-faint);
-  background: rgba(124,241,141,0.03);
+  grid-template-columns: 44px 1fr;
+  column-gap: 1rem;
+  row-gap: 0.6rem;
 }
 .counterpoint-marker {
+  grid-row: 1 / span 2;
   color: var(--green);
-  font-size: 28px;
+  font-size: 30px;
+  line-height: 1;
   text-shadow: 0 0 8px rgba(124,241,141,0.5);
 }
 .counterpoint-observation {
+  grid-column: 2;
   color: var(--white);
-  font-size: 14px;
+  font-size: 14.5px;
   line-height: 1.55;
-  margin-bottom: 8px;
 }
 .counterpoint-elaboration {
+  grid-column: 2;
   color: var(--orange);
   font-size: 12.5px;
   line-height: 1.65;
 }
 
-/* ── Frequencies (simplified node list) ────── */
+/* ── Frequencies ──────────────────────────── */
 .freq-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 1rem;
 }
-.freq-node .freq-name {
-  color: var(--white);
-  font-family: 'VT323', monospace;
-  font-size: 22px;
+.freq-card .num {
+  color: var(--cyan);
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 13px;
+  letter-spacing: 0.2em;
   margin-bottom: 6px;
 }
-.freq-node .freq-tags {
+.freq-card .name {
+  color: var(--white);
+  font-family: 'VT323', monospace;
+  font-size: 24px;
+  letter-spacing: 0.04em;
+  margin-bottom: 4px;
+}
+.freq-card .tags {
   color: var(--orange-dim);
   font-size: 12px;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.7rem;
+}
+.freq-card .freq-body {
+  color: var(--orange);
+  font-size: 12.5px;
+  line-height: 1.6;
 }
 
 /* ── Now / Descent log ────────────────────── */
@@ -448,7 +490,9 @@ main {
   display: grid;
   grid-template-columns: 56px 1fr;
   gap: 1rem;
+  align-items: start;
 }
+.unresolved-body { display: block; }
 .unresolved-index {
   color: var(--cyan);
   font-family: 'VT323', monospace;
@@ -480,35 +524,41 @@ main {
 /* ── Connect ─────────────────────────────── */
 .connect-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 1rem;
 }
-.connect-channel {
+.connect-link {
   display: block;
-  padding: 1rem 1.2rem;
-  border: 1px solid var(--orange);
-  background: rgba(0,0,0,0.5);
-  clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+  text-decoration: none;
   transition: all 0.15s;
 }
-.connect-channel:hover {
-  background: rgba(255,140,26,0.1);
+.connect-link:hover {
   border-color: var(--cyan);
-  text-shadow: none;
+  box-shadow: inset 3px 0 0 var(--cyan);
 }
-.connect-channel .arrow { color: var(--cyan); margin-right: 0.5em; }
-.connect-channel .name {
+.connect-link .connect-channel {
+  color: var(--cyan);
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  margin-bottom: 8px;
+}
+.connect-link .connect-name {
   color: var(--white);
   font-family: 'VT323', monospace;
-  font-size: 22px;
-  letter-spacing: 0.06em;
-  display: block;
+  font-size: 28px;
+  letter-spacing: 0.04em;
   margin-bottom: 4px;
 }
-.connect-channel .addr {
-  color: var(--orange-dim);
-  font-size: 12px;
+.connect-link .connect-handle {
+  color: var(--orange);
+  font-size: 13px;
   letter-spacing: 0.05em;
+  margin-bottom: 0.7rem;
+}
+.connect-link .connect-note {
+  color: var(--orange-dim);
+  font-size: 12.5px;
+  line-height: 1.55;
 }
 
 /* ── Inter-page navigation ───────────────── */
@@ -541,17 +591,19 @@ main {
 }
 
 /* About page specific */
-.about-statement {
-  font-size: 16px;
-  line-height: 1.8;
+.about-card { padding: 1.6rem 1.8rem; }
+.about-text p {
+  font-size: 15px;
+  line-height: 1.75;
   color: var(--orange);
   max-width: 65ch;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
 }
-.about-statement strong { color: var(--white); font-weight: normal; }
+.about-text p:last-of-type { margin-bottom: 0; }
+.about-text strong { color: var(--white); font-weight: normal; }
 .about-tag {
   display: inline-block;
-  margin-top: 1rem;
+  margin-top: 1.2rem;
   color: var(--cyan);
   border: 1px solid var(--cyan);
   padding: 0.4rem 1rem;
