@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>NOW // robertquick.org</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=VT323&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/assets/site.css" />
+</head>
+<body>
+<canvas id="rain"></canvas>
+<div class="hud">
+  <span class="corner tl"></span><span class="corner tr"></span>
+  <span class="corner bl"></span><span class="corner br"></span>
+  <span class="hud-label top">[ VECTOR // NOW ]</span>
+  <span class="hud-label bottom">[ 06 OF 07 ]</span>
+  <span class="hud-label left">[ SIGNAL // OK ]</span>
+  <span class="hud-label right">[ RELAY // ROBERTQUICK ]</span>
+</div>
+<div class="topbar"><span class="live">LIVE</span> &nbsp;//&nbsp; <span id="clock">--:--:--</span> UTC &nbsp;//&nbsp; SESSION ACTIVE</div>
+<a href="/" class="return-omni">◀ OMNI-TOOL</a>
+<div class="comm">
+  <div><span class="key">COMM ▸</span> 7.81 GHz</div>
+  <div><span class="key">CHAN ▸</span> 7/8 // OK</div>
+</div>
+
+<main>
+  <header class="page-header">
+    <div class="codex-stamp"><span class="index">▶ 06</span>VECTOR // DESCENT LOG</div>
+    <h1 class="page-title">NOW</h1>
+    <div class="page-sub">// CURRENT COORDINATES — UPDATED WHEN THE SIGNAL SHIFTS</div>
+  </header>
+
+  <p class="intro">
+    A snapshot of where the work is. Not a feed, not a timeline — just the current bearings. What's open, what's resisting resolution, what I keep returning to. Updated when the signal shifts, not on a schedule.
+  </p>
+
+  <div class="now-grid">
+    <div class="codex-card now-item">
+      <div class="now-label">// CURRENTLY READING</div>
+      <div class="now-value">Gödel, Escher, Bach — Hofstadter</div>
+    </div>
+    <div class="codex-card now-item">
+      <div class="now-label">// CURRENTLY STRESS-TESTING</div>
+      <div class="now-value">Metzinger's no-self thesis against Chalmers' hard problem. One says the subject is a model. The other says the model is running in something.</div>
+    </div>
+    <div class="codex-card now-item">
+      <div class="now-label">// CURRENTLY UNRESOLVED</div>
+      <div class="now-value">Whether Fisher's hauntology is a critical tool or a symptom of the thing it diagnoses.</div>
+    </div>
+  </div>
+
+  <h2 style="margin: 3rem 0 1rem; color: var(--cyan); letter-spacing: 0.18em; font-size: 14px;">▶ UNRESOLVED VARIABLES //</h2>
+
+  <p class="intro" style="margin-top: 0;">
+    Questions I keep returning to without resolution.
+  </p>
+
+  <div class="unresolved-list">
+    <div class="codex-card unresolved-item">
+      <div class="unresolved-index">01</div>
+      <div class="unresolved-body">
+        <div class="unresolved-question">At what point does critique of a system become structurally indistinguishable from participation in it?</div>
+        <div class="unresolved-elaboration">Every framework on this site was developed inside the academy — itself a system of power, credentialing, and knowledge production. The tools we use to analyse domination were forged within it. Whether that contaminates the analysis or simply describes its condition is a question I haven't resolved.</div>
+        <div class="unresolved-status">// STATUS: OPEN</div>
+      </div>
+    </div>
+    <div class="codex-card unresolved-item">
+      <div class="unresolved-index">02</div>
+      <div class="unresolved-body">
+        <div class="unresolved-question">Whether the rhizome is a genuine alternative to arborescent thought — or just a more flattering description of the same movement.</div>
+        <div class="unresolved-elaboration">Deleuze and Guattari's rhizome is compelling as a conceptual image. But in practice, every attempt to think or act rhizomatically seems to produce new hierarchies, new centres, new roots. The question is whether this is a failure of execution or a structural impossibility built into the concept itself.</div>
+        <div class="unresolved-status">// STATUS: OPEN</div>
+      </div>
+    </div>
+    <div class="codex-card unresolved-item">
+      <div class="unresolved-index">03</div>
+      <div class="unresolved-body">
+        <div class="unresolved-question">If the Integrated Spectacle pre-absorbs all opposition, what does resistance actually look like in practice — not in theory?</div>
+        <div class="unresolved-elaboration">Debord ended in silence. Baudrillard kept publishing. Neither answer feels adequate. The question isn't academic: if every act of resistance is metabolised as content, then the choice isn't between resistance and complicity — it's between different forms of complicity. I don't know what to do with that.</div>
+        <div class="unresolved-status">// STATUS: OPEN</div>
+      </div>
+    </div>
+    <div class="codex-card unresolved-item">
+      <div class="unresolved-index">04</div>
+      <div class="unresolved-body">
+        <div class="unresolved-question">If the self is a model, and the system forecloses alternatives, and experience stubbornly remains — what exactly is it that's trapped?</div>
+        <div class="unresolved-elaboration">Metzinger says there is no self behind the phenomenal self-model. Fisher says we cannot imagine outside the system. Chalmers says something is having the experience regardless. These three positions don't resolve — they triangulate something that has no name yet. The trapped thing isn't a subject. But it isn't nothing either.</div>
+        <div class="unresolved-status">// STATUS: OPEN</div>
+      </div>
+    </div>
+  </div>
+
+  <nav class="page-nav">
+    <a href="/archive"><span class="label">◀ PREV //</span>ARCHIVE</a>
+    <a href="/connect">CONNECT<span class="label">// NEXT ▶</span></a>
+  </nav>
+</main>
+
+<div class="ticker"><div class="ticker-track" id="ticker"></div></div>
+<script src="/assets/site.js"></script>
+</body>
+</html>
